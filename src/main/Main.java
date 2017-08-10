@@ -12,7 +12,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		File left = new File("Purity1.java");
-		File right = new File("Purity2.java");
+		File right = new File("Purity3.java");
 
 		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
 		try {
@@ -27,7 +27,7 @@ public class Main {
 		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
 		if(changes != null) {
 		    for(SourceCodeChange change : changes) {
-		        System.out.println(change.getLabel());
+		        System.out.println(change.getLabel()+" | "+change.toString());
 		    }
 		}
 
