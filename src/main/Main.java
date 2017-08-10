@@ -11,8 +11,8 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 public class Main {
 
 	public static void main(String[] args) {
-		File left = new File("Purity1.java");
-		File right = new File("Purity2.java");
+		File left = new File("Purity2.java");
+		File right = new File("Purity1.java");
 
 		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
 		try {
