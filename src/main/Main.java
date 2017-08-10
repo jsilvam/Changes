@@ -11,16 +11,20 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 public class Main {
 
 	public static void main(String[] args) {
-		File left = new File("Purity1.java");
-		File right = new File("Purity3.java");
+		
+		
+		for(String s:FileUtils.listClass(new File("/home/jaziel/git/Changes/src"))) {
+			System.out.println(s);
+		}
+		
+		
+		/*File left = new File("Purity3.java");
+		File right = new File("Purity4.java");
 
 		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
 		try {
 		    distiller.extractClassifiedSourceCodeChanges(left, right);
 		} catch(Exception e) {
-		    /* An exception most likely indicates a bug in ChangeDistiller. Please file a
-		       bug report at https://bitbucket.org/sealuzh/tools-changedistiller/issues and
-		       attach the full stack trace along with the two files that you tried to distill. */
 		    System.err.println("Warning: error while change distilling. " + e.getMessage());
 		}
 
@@ -29,7 +33,7 @@ public class Main {
 		    for(SourceCodeChange change : changes) {
 		        System.out.println(change.getLabel()+" | "+change.toString());
 		    }
-		}
+		}*/
 
 	}
 

@@ -129,9 +129,6 @@ public class Purity {
 	private class teste{
 		String n;
 
-		private String getN(){
-			return n;
-		}
 
 	}
 	

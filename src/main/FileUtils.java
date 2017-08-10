@@ -5,7 +5,7 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileUtils {
+public abstract class FileUtils {
 	
 	public static List<String> listClass(File srcFolder){
 		List<String> result= new ArrayList<String>();
