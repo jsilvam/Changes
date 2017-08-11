@@ -48,7 +48,7 @@ public class GithubDownloader {
 				break;
 			} catch (IOException e) {
 				System.out.println("Error downloading "+commit+".zip");
-				System.out.println("Trying again...");
+				System.out.println("Trying again in 3 seconds");
 				Thread.sleep(3000);
 			}
 		}
