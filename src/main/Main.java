@@ -7,15 +7,17 @@ import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
 import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
+import utils.FileUtils;
 
 public class Main {
 
 	public static void main(String[] args) {
 		
 		
-		for(String s:FileUtils.listClass(new File("/home/jaziel/git/Changes/src"))) {
-			System.out.println(s);
-		}
+		
+		//for(String s:FileUtils.listClass(new File("/home/jaziel/git/Changes/src"))) {
+			//System.out.println(s);
+		//}
 		
 		
 		/*File left = new File("Purity3.java");
