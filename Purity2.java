@@ -22,9 +22,6 @@ public class Purity {
 		this.urlRepository=urlRepository;
 	}
 	
-	void setUrlRepository(String urlRepository){
-		this.urlRepository=urlRepository;
-	}
 	
 	
 

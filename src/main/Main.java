@@ -21,8 +21,8 @@ public class Main {
 		//}
 		
 		
-		File left = new File("Purity3.java");
-		File right = new File("Purity4.java");
+		File left = new File("Purity1.java");
+		File right = new File("Purity2.java");
 
 		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
 		try {

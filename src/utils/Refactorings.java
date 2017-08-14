@@ -52,13 +52,15 @@ public class Refactorings {
 				flag=true;
 				this.parent=in.next();
 				in.next();
-				in.next();
 				switch(in.next()) {
 					case "Extract Method":
+						in.next();
+						this.addedMethods.add(in.next());
 						break;
 					case "Inline Method":
+						this.removedMethods.add(in.next());
 						break;
-					case "Rename Method":
+					case "Rename Method"://There is cases where the method were also moved, analyse it later. 
 						break;
 					case "Move Method":
 						break;
@@ -74,21 +76,16 @@ public class Refactorings {
 						break;
 					case "Rename Class":
 						key=in.next();
-						in.next();
 						value=in.next();
 						changedClassSignatures.put(key, value);
 						break;
 					case "Move Class":
-						in.next();
 						key=in.next();
-						in.next();
 						value=in.next();
 						changedClassSignatures.put(key, value);
 						break;
 					case "Move And Rename Class":
-						in.next();
 						key=in.next();
-						in.next();
 						value=in.next();
 						changedClassSignatures.put(key, value);
 						break;
