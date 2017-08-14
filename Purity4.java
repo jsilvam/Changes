@@ -108,10 +108,8 @@ public class Purity {
 		Report result=sr.getReport();
 		
 		deleteDirectory(git.getLocation());
-		if(result.isRefactoring())
+		if(!result.isRefactoring())
 			return 1;
-		else
-			return 0;
 	}
 
 	
@@ -126,10 +124,5 @@ public class Purity {
 		dir.delete();
 	}
 
-	private class teste{
-		String n;
-
-
-	}
 	
 }
