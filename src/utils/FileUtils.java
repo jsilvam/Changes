@@ -36,7 +36,7 @@ public abstract class FileUtils {
 				result.addAll(listClass(file,name+"."+file.getName()));
 			else
 				if(file.getName().toLowerCase().endsWith(".java"))
-					result.add(file.getName());
+					result.add(name+"."+file.getName());
 				
 		}
 		
