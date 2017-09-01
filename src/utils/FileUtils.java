@@ -16,7 +16,8 @@ public abstract class FileUtils {
 			if(file.isDirectory())
 				result.addAll(listClass(file,file.getName()));
 			else
-				result.add(file.getName());
+				if(file.getName().toLowerCase().endsWith(".java"))
+					result.add(file.getName());
 				
 		}
 		
@@ -34,7 +35,8 @@ public abstract class FileUtils {
 			if(file.isDirectory())
 				result.addAll(listClass(file,name+"."+file.getName()));
 			else
-				result.add(name+"."+file.getName());
+				if(file.getName().toLowerCase().endsWith(".java"))
+					result.add(file.getName());
 				
 		}
 		
