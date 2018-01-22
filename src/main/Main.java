@@ -21,8 +21,8 @@ public class Main {
 		//}
 		
 		
-		File left = new File("Purity1.java");
-		File right = new File("Purity2.java");
+		File left = new File("Purity5.java");
+		File right = new File("Purity6.java");
 
 		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
 		try {
@@ -34,26 +34,27 @@ public class Main {
 		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
 		if(changes != null) {
 		    for(SourceCodeChange change : changes) {
-		    	System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
+		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
 		    	
-		    	
-		    	/*System.out.println(change.getLabel());
-		        System.out.println(change.toString());
+		    	System.out.println("\nbegin");
+		    	System.out.println("change.getLabel():  "+change.getLabel());
+		        System.out.println("change.toString():  "+change.toString());
 		        
 		        System.out.println("\nChanged entity");
-		        System.out.println(change.getChangedEntity().getLabel());
-		        System.out.println(change.getChangedEntity().getUniqueName());
-		        System.out.println(change.getChangedEntity().getType().name());
-		        System.out.println(change.getChangedEntity().getSourceRange().toString()+"\n");
+		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
+		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
+		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
+		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
+		        System.out.println("AssociatedEntities");
 		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
 		        	System.out.println(sc.getLabel());
 		        }
 		        
 		        System.out.println("\nChange type");
-		        System.out.println(change.getChangeType().name());
-		        System.out.println(change.getChangeType().toString());
-		        System.out.println(change.getChangeType().getSignificance().name());
-		        System.out.println(change.getChangeType().getSignificance().toString());*/
+		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
+		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
+		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
+		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
 		        
 		    }
 		}
