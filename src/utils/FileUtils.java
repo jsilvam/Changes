@@ -7,17 +7,21 @@ import java.util.List;
 
 public abstract class FileUtils {
 	
-	public static List<String> listClass(File srcFolder){
+	public static List<String> listClasses(File srcFolder){
+		if(!srcFolder.exists())
+			return new ArrayList<String>();
+		
 		List<String> result= new ArrayList<String>();
 		
 		File[] files=srcFolder.listFiles();
 		
 		for(File file:files) {
 			if(file.isDirectory())
-				result.addAll(listClass(file,file.getName()));
+				result.addAll(listClasses(file,file.getName()));
 			else
-				if(file.getName().toLowerCase().endsWith(".java"))
-					result.add(file.getName());
+				if(file.getName().toLowerCase().endsWith(".java") && 
+						!file.getName().toLowerCase().equals("package-info.java"))
+					result.add(file.getName().substring(0, file.getName().lastIndexOf(".")));
 				
 		}
 		
@@ -25,7 +29,7 @@ public abstract class FileUtils {
 		
 	}
 	
-	public static List<String> listClass(File srcFolder,String name){
+	public static List<String> listClasses(File srcFolder,String name){
 		List<String> result= new ArrayList<String>();
 		
 		File[] files=srcFolder.listFiles();
@@ -33,10 +37,11 @@ public abstract class FileUtils {
 		
 		for(File file:files) {
 			if(file.isDirectory())
-				result.addAll(listClass(file,name+"."+file.getName()));
+				result.addAll(listClasses(file,name+"."+file.getName()));
 			else
-				if(file.getName().toLowerCase().endsWith(".java"))
-					result.add(name+"."+file.getName());
+				if(file.getName().toLowerCase().endsWith(".java") && 
+						!file.getName().toLowerCase().equals("package-info.java"))
+					result.add(name+"."+file.getName().substring(0, file.getName().lastIndexOf(".")));
 				
 		}
 		

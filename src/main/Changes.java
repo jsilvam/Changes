@@ -34,8 +34,8 @@ public class Changes {
 		File sourceFolder=ZipExtractor.extract(sourceFile, new File(git.getLocation(),parent));
 		
 		//list Java files
-		List<String> sourceFiles=FileUtils.listClass(new File(sourceFolder,"src\\main\\java"));
-		List<String> targetFiles=FileUtils.listClass(new File(targetFolder,"src\\main\\java"));
+		List<String> sourceFiles=FileUtils.listClasses(new File(sourceFolder,"src\\main\\java"));
+		List<String> targetFiles=FileUtils.listClasses(new File(targetFolder,"src\\main\\java"));
 		
 		for(String file:sourceFiles) {
 			File left = new File(sourceFolder,"src\\main\\java"+file.replace(".", "\\"));
