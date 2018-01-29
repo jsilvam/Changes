@@ -3,6 +3,7 @@ package main;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
@@ -34,10 +35,17 @@ public class Changes {
 		File sourceFolder=ZipExtractor.extract(sourceFile, new File(git.getLocation(),parent));
 		
 		//list Java files
-		List<String> sourceFiles=FileUtils.listClasses(new File(sourceFolder,"src\\main\\java"));
-		List<String> targetFiles=FileUtils.listClasses(new File(targetFolder,"src\\main\\java"));
+		Map<String,File> sourceFiles=FileUtils.listClasses(new File(sourceFolder,"src\\main\\java"));
+		Map<String,File> targetFiles=FileUtils.listClasses(new File(targetFolder,"src\\main\\java"));
 		
-		for(String file:sourceFiles) {
+		for(String clazz:sourceFiles.keySet()) {
+			if(refactorings.getChangedClassSignatures().containsKey(clazz)) {
+				
+			}
+		}
+		
+		
+		/*for(String file:sourceFiles) {
 			File left = new File(sourceFolder,"src\\main\\java"+file.replace(".", "\\"));
 			if(refactorings.getChangedClassSignatures().containsKey(file)) {
 				File right = new File(targetFolder,"src\\main\\java"+refactorings.getChangedClassSignatures().get(file).replace(".", "\\"));
@@ -54,7 +62,7 @@ public class Changes {
 		
 		for(String file: targetFiles)
 			System.out.println("File Removed: "+file);
-		
+		*/
 		System.out.println("\n\nChanges...\n");
 		
 		deleteDirectory(git.getLocation());
