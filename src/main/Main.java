@@ -43,6 +43,7 @@ public class Main {
 		        System.out.println("\nChanged entity");
 		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
 		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
+		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
 		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
 		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
 		        System.out.println("AssociatedEntities");
@@ -55,7 +56,7 @@ public class Main {
 		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
 		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
 		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
-		        
+		                
 		    }
 		}
 

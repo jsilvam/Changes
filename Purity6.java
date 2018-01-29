@@ -127,7 +127,8 @@ public class Purity {
 	}
 
 	private class teste{
-		int m;
+		String m;
+
 
 	}
 	
