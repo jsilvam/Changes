@@ -24,6 +24,7 @@ public class Changes {
 	public List<SourceCodeChange> getChanges(String commit) throws Exception {
 		//initialize
 		Refactorings refactorings = new Refactorings(this.csvPath,commit); //class not finished.
+		Analyser analyser=new Analyser(refactorings);
 		String parent=refactorings.getParent();
 		GithubDownloader git = new GithubDownloader(this.urlRepository);
 		List<SourceCodeChange> changes = new ArrayList<SourceCodeChange>();
@@ -43,24 +44,26 @@ public class Changes {
 				String newSignature=refactorings.getChangedClassSignatures().get(clazz);
 				File left=sourceFiles.get(clazz);
 				File right=targetFiles.get(newSignature);
-				changes.addAll(this.listChangesOfClass(left,right));
+				analyser.analyse(this.listChangesOfClass(left,right));
+				targetFiles.remove(newSignature);
 			}else if (targetFiles.containsKey(clazz)){
 				File left=sourceFiles.get(clazz);
 				File right=targetFiles.get(clazz);
-				changes.addAll(this.listChangesOfClass(left,right));
+				analyser.analyse(this.listChangesOfClass(left,right));
+				targetFiles.remove(clazz);
 			}else {
 				System.out.println("File Removed: "+clazz);
+				analyser.addRemovedClass(clazz);
 			}
+		}
+		
+		for(String clazz:targetFiles.keySet()) {
+			System.out.println("New class: "+clazz);
+			analyser.addNewClass(clazz);
 		}
 		
 		
 		
-		/*/Remove the files that were already analyzed, remaining only the new files
-		targetFiles.removeAll(sourceFiles);
-		
-		for(String file: targetFiles)
-			System.out.println("File Removed: "+file);
-		*/
 		System.out.println("\n\nChanges...\n");
 		
 		deleteDirectory(git.getLocation());
