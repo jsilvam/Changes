@@ -35,29 +35,27 @@ public class Changes {
 		File sourceFolder=ZipExtractor.extract(sourceFile, new File(git.getLocation(),parent));
 		
 		//list Java files
-		Map<String,File> sourceFiles=FileUtils.listClasses(new File(sourceFolder,"src\\main\\java"));
-		Map<String,File> targetFiles=FileUtils.listClasses(new File(targetFolder,"src\\main\\java"));
+		Map<String,File> sourceFiles=FileUtils.getClasses(sourceFolder);
+		Map<String,File> targetFiles=FileUtils.getClasses(targetFolder);
 		
 		for(String clazz:sourceFiles.keySet()) {
 			if(refactorings.getChangedClassSignatures().containsKey(clazz)) {
-				
+				String newSignature=refactorings.getChangedClassSignatures().get(clazz);
+				File left=sourceFiles.get(clazz);
+				File right=targetFiles.get(newSignature);
+				changes.addAll(this.listChangesOfClass(left,right));
+			}else if (targetFiles.containsKey(clazz)){
+				File left=sourceFiles.get(clazz);
+				File right=targetFiles.get(clazz);
+				changes.addAll(this.listChangesOfClass(left,right));
+			}else {
+				System.out.println("File Removed: "+clazz);
 			}
 		}
 		
 		
-		/*for(String file:sourceFiles) {
-			File left = new File(sourceFolder,"src\\main\\java"+file.replace(".", "\\"));
-			if(refactorings.getChangedClassSignatures().containsKey(file)) {
-				File right = new File(targetFolder,"src\\main\\java"+refactorings.getChangedClassSignatures().get(file).replace(".", "\\"));
-				changes.addAll(listChangesOfClass(left, right));
-			}else if(targetFiles.contains(file)){
-				File right = new File(targetFolder,"src\\main\\java"+file.replace(".", "\\"));
-				changes.addAll(listChangesOfClass(left, right));
-			}else
-				System.out.println("File Removed: "+file);
-		}
 		
-		//Remove the files that were already analyzed, remaining only the new files
+		/*/Remove the files that were already analyzed, remaining only the new files
 		targetFiles.removeAll(sourceFiles);
 		
 		for(String file: targetFiles)

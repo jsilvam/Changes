@@ -9,7 +9,7 @@ import java.util.Map;
 public abstract class FileUtils {
 	
 	
-	public static Map<String,File> getClassesName(File projectFolder) throws Exception {
+	public static Map<String,File> getClasses(File projectFolder) throws Exception {
 		List<File> modules=XMLUtils.getModules(new File(projectFolder,"pom.xml"));
 		Map<String,File> classes=new HashMap<String,File>();
 		for(File module:modules) {
