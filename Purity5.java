@@ -128,8 +128,14 @@ public class Purity {
 
 	private class teste{
 		String m;
-
-
+		
+		private int getM() {
+			return m;
+		}
+		
+		private void setM(String m) {
+			this.m=m;
+		}
 	}
 	
 }

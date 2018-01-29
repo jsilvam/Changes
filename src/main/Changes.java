@@ -1,7 +1,6 @@
 package main;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -14,20 +13,21 @@ import utils.*;
 public class Changes {
 	
 	private String urlRepository;
-	private String csvPath;
+	private String RefactoringsCSV;
+	private CSV ResultCSV;
 	
-	public Changes(String urlRepository, String csvPath){
+	public Changes(String urlRepository, String refactoringsCSV, CSV resultCSV){
 		this.urlRepository=urlRepository;
-		this.csvPath=csvPath;
+		this.RefactoringsCSV=refactoringsCSV;
+		this.ResultCSV=resultCSV;
 	}
 	
-	public List<SourceCodeChange> getChanges(String commit) throws Exception {
+	public void getChanges(String commit) throws Exception {
 		//initialize
-		Refactorings refactorings = new Refactorings(this.csvPath,commit); //class not finished.
-		Analyser analyser=new Analyser(refactorings);
+		Refactorings refactorings = new Refactorings(this.RefactoringsCSV,commit); //class not finished.
+		Analyser analyser=new Analyser(refactorings,commit);
 		String parent=refactorings.getParent();
 		GithubDownloader git = new GithubDownloader(this.urlRepository);
-		List<SourceCodeChange> changes = new ArrayList<SourceCodeChange>();
 		
 		//download and extract projects
 		File targetFile=git.downloadCommit(commit);
@@ -44,32 +44,23 @@ public class Changes {
 				String newSignature=refactorings.getChangedClassSignatures().get(clazz);
 				File left=sourceFiles.get(clazz);
 				File right=targetFiles.get(newSignature);
-				analyser.analyse(this.listChangesOfClass(left,right));
+				analyser.analyse(this.listChangesOfClass(left,right),ResultCSV,clazz,newSignature);
 				targetFiles.remove(newSignature);
 			}else if (targetFiles.containsKey(clazz)){
 				File left=sourceFiles.get(clazz);
 				File right=targetFiles.get(clazz);
-				analyser.analyse(this.listChangesOfClass(left,right));
+				analyser.analyse(this.listChangesOfClass(left,right),ResultCSV,clazz,clazz);
 				targetFiles.remove(clazz);
 			}else {
 				System.out.println("File Removed: "+clazz);
-				analyser.addRemovedClass(clazz);
+				analyser.addRemovedClass(clazz,ResultCSV);
 			}
 		}
 		
 		for(String clazz:targetFiles.keySet()) {
 			System.out.println("New class: "+clazz);
-			analyser.addNewClass(clazz);
+			analyser.addNewClass(clazz,ResultCSV);
 		}
-		
-		
-		
-		System.out.println("\n\nChanges...\n");
-		
-		deleteDirectory(git.getLocation());
-		
-		return changes;
-		
 	}
 	
 	public List<SourceCodeChange> listChangesOfClass(File left, File right) {
