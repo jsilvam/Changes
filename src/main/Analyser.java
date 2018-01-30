@@ -30,6 +30,9 @@ public class Analyser {
 		String aux;
 		for(SourceCodeChange change:changes) {
 			String changedEntity=change.getChangedEntity().getUniqueName();
+			System.out.println();
+			System.out.println("change.getLabel():  "+change.getLabel());
+			System.out.println("change.toString():  "+change.toString());
 			switch(change.getLabel()) {
 				case "ADDITIONAL_CLASS":
 					if(!refactorings.getAddedClasses().contains(changedEntity) &&
@@ -75,6 +78,8 @@ public class Analyser {
 				default:
 					csv.addLine(commit, change.getLabel(), changedEntity, classBefore, classAfter);
 			}
+			System.out.println("end");
+			System.out.println();
 		}
 	}
 	
