@@ -61,6 +61,8 @@ public class Changes {
 			System.out.println("New class: "+clazz);
 			analyser.addNewClass(clazz,ResultCSV);
 		}
+		
+		this.deleteDirectory(git.getLocation());
 	}
 	
 	public List<SourceCodeChange> listChangesOfClass(File left, File right) {
