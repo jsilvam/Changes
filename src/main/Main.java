@@ -34,7 +34,7 @@ public class Main {
 		CSV result= new CSV(new File(dir+"Mudancas/"+aux+".csv"));
 		Scanner in = new Scanner(new FileReader(dir+"Refatoramentos/Part 2/"+aux+".csv")).useDelimiter(";");
 		PrintStream ps = new PrintStream(
-			     new FileOutputStream(dir+"Mudancas/"+aux+" - log.txt", true));
+			     new FileOutputStream(dir+"Mudancas/Logs/"+aux+" - log.txt", true));
 		
 		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
 		
@@ -61,6 +61,8 @@ public class Main {
 	
 	public static void main(String[] args) throws IOException {
 		
+		check("https://github.com/square/okhttp");
+		check("https://github.com/square/retrofit");
 		check("https://github.com/Kailashrb/scribe-java");
 		check("https://github.com/jopt-simple/jopt-simple");
 		check("https://github.com/notnoop/java-apns");	
