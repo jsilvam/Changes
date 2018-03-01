@@ -14,7 +14,7 @@ import saferefactor.core.SafeRefactor;
 import saferefactor.core.SafeRefactorException;
 import saferefactor.core.util.Project;
 
-public class Purity {
+public class Purity{
 	
 	private String urlRepository;
 	
@@ -32,7 +32,6 @@ public class Purity {
 	
 
 	public int check(String commit, String parent) throws Exception{
-		
 		
 		GithubDownloader git=new GithubDownloader(urlRepository);
 		ZipExtractor ze=new ZipExtractor();
@@ -114,7 +113,6 @@ public class Purity {
 			return 0;
 	}
 
-	
 	private void deleteDirectory(File dir){
 		File[] contents=dir.listFiles();
 		for(File f: contents){
@@ -133,9 +131,11 @@ public class Purity {
 			return m;
 		}
 		
-		private void setM(String m) {
-			this.m=m;
+		private void setMi(String m1) {
+			m=m1;
+			return;
 		}
+		
 	}
 	
 }

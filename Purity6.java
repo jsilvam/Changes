@@ -37,6 +37,8 @@ public class Purity {
 		GithubDownloader git=new GithubDownloader(urlRepository);
 		ZipExtractor ze=new ZipExtractor();
 		
+		
+		
 		File targetFile=git.downloadCommit(commit);
 		File targetFolder=ze.extract(targetFile, new File(git.getLocation(),commit));
 		
@@ -133,9 +135,12 @@ public class Purity {
 			return m;
 		}
 		
-		private void setM(String m) {
-			this.m=m;
+		
+		private void setMi(String m1) {
+			m=m1;
+			return;
 		}
+		
 	}
 	
 }
