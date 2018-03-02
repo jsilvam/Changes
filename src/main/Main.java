@@ -17,6 +17,7 @@ import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
 import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
+import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 import utils.CSV;
 import utils.FileUtils;
 
@@ -88,7 +89,8 @@ public class Main {
 		} catch(Exception e) {
 		    System.err.println("Warning: error while change distilling. " + e.getMessage());
 		}
-
+		
+		ModificationHistory mh=new ModificationHistory();
 		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
 		if(changes != null) {
 		    for(SourceCodeChange change : changes) {
@@ -97,6 +99,7 @@ public class Main {
 		    	System.out.println("\nbegin");
 		    	System.out.println("change.getLabel():  "+change.getLabel());
 		        System.out.println("change.toString():  "+change.toString());
+		        mh.addChange(change);
 		        System.out.println();
 		        
 		        if(!history.contains(change)) {
@@ -118,14 +121,16 @@ public class Main {
 		        System.out.println("\nBody:");
 		        if(change.getBodyStructure()!=null) {
 		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-		        	while(e.hasMoreElements())
-		        		System.out.println(e.nextElement());
+		        	while(e.hasMoreElements()) {
+		        		Node n=(Node)e.nextElement();
+		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
+		        	}
 		        }else {
 		        	System.out.println("body: null");
 		        }
 		        
 //		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
-		        
+//		        
 //		        System.out.println("\nChanged entity");
 //		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
 //		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());

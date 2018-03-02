@@ -1,4 +1,4 @@
-package utils;
+package main;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -11,12 +11,12 @@ import java.util.Scanner;
 public class Refactorings {
 	
 	private Map<String, String> changedClassSignatures;
-	private Map<String, String> movedAtributes;
+	private Map<String, String> movedAttributes;
 	private Map<String, String> movedMethods;
+	private Map<String, String> extractedMethods;
+	private Map<String, String> inlinedMethods;
 	
 	private List<String> addedClasses;
-	private List<String> addedMethods;
-	private List<String> removedMethods;
 	
 	private List<String> changedMethods; //very low probability of use
 	
@@ -31,12 +31,12 @@ public class Refactorings {
 		
 		this.changedClassSignatures = new HashMap<String,String>();
 		this.movedMethods = new HashMap<String,String>();
-		this.movedAtributes = new HashMap<String,String>();
+		this.movedAttributes = new HashMap<String,String>();
+		this.extractedMethods = new HashMap<String,String>();
+		this.inlinedMethods = new HashMap<String,String>();
 		
 		this.addedClasses = new ArrayList<String>();
-		this.addedMethods = new ArrayList<String>();
 		this.changedMethods = new ArrayList<String>();
-		this.removedMethods = new ArrayList<String>();
 		
 		
 		Scanner in = new Scanner(new FileReader(csvPath)).useDelimiter(";");
@@ -52,11 +52,14 @@ public class Refactorings {
 				in.next();
 				switch(in.next()) {
 					case "Extract Method":
-						in.next();
-						this.addedMethods.add(in.next());
+						key=in.next();
+						value=in.next();
+						this.extractedMethods.put(key, value);
 						break;
 					case "Inline Method":
-						this.removedMethods.add(in.next());
+						value=in.next();
+						key=in.next();
+						this.inlinedMethods.put(key, value);
 						break;
 					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, does nothing.
 						key=in.next();
@@ -66,46 +69,22 @@ public class Refactorings {
 						if(!before.equals(after))
 							this.movedMethods.put(key, value);
 						break;
+					case "Pull Up Method":
+					case "Push Down Method":
 					case "Move Method":
 						key=in.next();
 						value=in.next();
 						this.movedMethods.put(key, value);
 						break;
-					case "Pull Up Method":
-						key=in.next();
-						value=in.next();
-						this.movedMethods.put(key, value);
-						break;
-					case "Push Down Method":
-						key=in.next();
-						value=in.next();
-						this.movedMethods.put(key, value);
-						break;
+					case "Pull Up Attribute":
+					case "Push Down Attribute":
 					case "Move Attribute":
 						key=in.next();
 						value=in.next();
-						this.movedAtributes.put(key, value);
-						break;
-					case "Pull Up Attribute":
-						key=in.next();
-						value=in.next();
-						this.movedAtributes.put(key, value);
-						break;
-					case "Push Down Attribute":
-						key=in.next();
-						value=in.next();
-						this.movedAtributes.put(key, value);
+						this.movedAttributes.put(key, value);
 						break;
 					case "Rename Class":
-						key=in.next();
-						value=in.next();
-						changedClassSignatures.put(key, value);
-						break;
 					case "Move Class":
-						key=in.next();
-						value=in.next();
-						changedClassSignatures.put(key, value);
-						break;
 					case "Move And Rename Class":
 						key=in.next();
 						value=in.next();
@@ -130,13 +109,31 @@ public class Refactorings {
 		}
 		in.close();
 	}
+	
+	public boolean isMovedMethod(String signature) {
+		return (this.movedMethods.containsKey(signature) || this.movedMethods.containsValue(signature));
+	}
+	
+	public boolean isMovedAttribute(String signature) {
+		return (this.movedAttributes.containsKey(signature) || this.movedAttributes.containsValue(signature));
+	}
+	
+	//needs better name
+	public boolean isExtractedMethod(String signature) {
+		return (this.extractedMethods.containsKey(signature) || this.extractedMethods.containsValue(signature));
+	}
+	
+	//needs better name
+	public boolean isInlinedMethod(String signature) {
+		return (this.inlinedMethods.containsKey(signature) || this.inlinedMethods.containsValue(signature));
+	}
 
 	public Map<String, String> getChangedClassSignatures() {
 		return changedClassSignatures;
 	}
 
-	public Map<String, String> getMovedAtributes() {
-		return movedAtributes;
+	public Map<String, String> getMovedAttributes() {
+		return movedAttributes;
 	}
 
 	public Map<String, String> getMovedMethods() {
@@ -147,12 +144,12 @@ public class Refactorings {
 		return addedClasses;
 	}
 
-	public List<String> getAddedMethods() {
-		return addedMethods;
+	public Map<String, String> getExtractedMethods() {
+		return extractedMethods;
 	}
 
-	public List<String> getRemovedMethods() {
-		return removedMethods;
+	public Map<String, String> getInlinedMethods() {
+		return inlinedMethods;
 	}
 
 	public List<String> getChangedMethods() {
