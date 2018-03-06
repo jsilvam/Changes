@@ -128,7 +128,7 @@ public class Purity {
 		dir.delete();
 	}
 
-	private class teste{
+	private class Teste{
 		String m;
 		
 		private int getM() {
@@ -136,10 +136,6 @@ public class Purity {
 		}
 		
 		
-		private void setMi(String m1) {
-			m=m1;
-			return;
-		}
 		
 	}
 	

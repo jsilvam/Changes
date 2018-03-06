@@ -1,5 +1,6 @@
 package main;
 
+import java.util.Enumeration;
 import java.util.List;
 
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
@@ -30,9 +31,26 @@ public class analyser {
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		SourceCodeChange method=modificationHistory.getCreatedMethod(root.getUniqueName());
-		Node body=method.getBodyStructure();
-		body.preorderEnumeration();
-		changes.get(0).getChangedEntity().getType();
+		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
+		
+		while(body.hasMoreElements()) {
+			Node node=body.nextElement();
+			node.disableMatched();
+			for(SourceCodeChange sc: changes) {
+				if(node.getEntity().equals(sc.getChangedEntity())) {
+					try {
+						modificationHistory.setCheckedChange(sc);
+						modificationHistory.setCheckedChange(method);
+						changes.remove(sc);
+						node.enableMatched();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+		//verificar o classificador do change distiller para classificar.
 		
 		
 	}

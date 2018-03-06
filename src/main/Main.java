@@ -99,55 +99,61 @@ public class Main {
 		    	System.out.println("\nbegin");
 		    	System.out.println("change.getLabel():  "+change.getLabel());
 		        System.out.println("change.toString():  "+change.toString());
-		        mh.addChange(change);
-		        System.out.println();
-		        
-		        if(!history.contains(change)) {
-		        	System.out.println("change.getParentEntity(): "+change.getParentEntity());
-		        	System.out.println("change.getRootEntity(): "+change.getRootEntity());
-		        	history.addAll(change.getRootEntity().getSourceCodeChanges());
-		        	
-		        }
-		        
-		        System.out.println("\nDeclaration:");
-		        if(change.getDeclarationStructure()!=null) {
-		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
-		        	while(e.hasMoreElements())
-		        		System.out.println(e.nextElement());
-		        }else {
-		        	System.out.println("Declaration: null");
-		        }
-		        
-		        System.out.println("\nBody:");
-		        if(change.getBodyStructure()!=null) {
-		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-		        	while(e.hasMoreElements()) {
-		        		Node n=(Node)e.nextElement();
-		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
-		        	}
-		        }else {
-		        	System.out.println("body: null");
-		        }
-		        
-//		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
+//		        mh.addChange(change);
+//		        System.out.println();
 //		        
-//		        System.out.println("\nChanged entity");
-//		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
-//		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
-//		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
-//		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
-//		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
-//		        System.out.println("AssociatedEntities");
-//		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
-//		        	System.out.println(sc.getLabel());
+//		        if(!history.contains(change)) {
+//		        	System.out.println("change.getParentEntity(): "+change.getParentEntity());
+//		        	System.out.println("change.getRootEntity(): "+change.getRootEntity());
+//		        	history.addAll(change.getRootEntity().getSourceCodeChanges());
+//		        	
 //		        }
 //		        
-//		        System.out.println("\nChange type");
-//		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
-//		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
-//		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
-//		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
-		                
+//		        System.out.println("\nDeclaration:");
+//		        if(change.getDeclarationStructure()!=null) {
+//		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
+//		        	while(e.hasMoreElements())
+//		        		System.out.println(e.nextElement());
+//		        }else {
+//		        	System.out.println("Declaration: null");
+//		        }
+//		        
+//		        System.out.println("\nBody:");
+//		        if(change.getBodyStructure()!=null) {
+//		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
+//		        	while(e.hasMoreElements()) {
+//		        		Node n=(Node)e.nextElement();
+//		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
+//		        	}
+//		        }else {
+//		        	System.out.println("body: null");
+//		        }
+		        
+		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
+		        
+		        System.out.println("\nChanged entity");
+		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
+		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
+		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
+		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
+		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
+		        System.out.println("AssociatedEntities");
+		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
+		        	System.out.println(sc.getLabel());
+		        }
+		        
+		        System.out.println("\nChange type");
+		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
+		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
+		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
+		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
+		        
+		        
+		        Enumeration<Node> body = change.getBodyStructure().preorderEnumeration();
+				while(body.hasMoreElements()) {
+					Node n=body.nextElement();
+					System.out.println(n.toString()+"  "+n.isMatched());
+				}
 		    }
 		}
 

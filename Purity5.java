@@ -26,7 +26,6 @@ public class Purity{
 		this.urlRepository=urlRepository;
 	}
 	
-
 	public String getUrlRepository(){
 		return this.urlRepository;
 	}
@@ -43,6 +42,7 @@ public class Purity{
 		
 		File sourceFile=git.downloadCommit(parent);
 		File sourceFolder=ze.extract(sourceFile, new File(git.getLocation(),parent));
+		
 		
 		
 		//File targetFolder=new File("C:\\tmp\\Projeto\\Downloads\\jasmine-maven-plugin\\88e4387b52361442b7a70c84cd2e3625258d4ae2");
@@ -124,7 +124,7 @@ public class Purity{
 		dir.delete();
 	}
 
-	private class teste{
+	private class Teste{
 		String m;
 		
 		private int getM() {

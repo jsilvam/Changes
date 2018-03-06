@@ -7,11 +7,11 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 
 public class ModificationHistory {
 	
-	Map<SourceCodeChange,Boolean> changeHistory;
-	Map<String,SourceCodeChange> createdMethods;
-	Map<String,SourceCodeChange> deletedMethods;
-	Map<String,SourceCodeChange> createdFields;
-	Map<String,SourceCodeChange> deletedFields;
+	private Map<SourceCodeChange,Boolean> changeHistory;
+	private Map<String,SourceCodeChange> createdMethods;
+	private Map<String,SourceCodeChange> deletedMethods;
+	private Map<String,SourceCodeChange> createdFields;
+	private Map<String,SourceCodeChange> deletedFields;
 	
 
 	public ModificationHistory() {
@@ -46,11 +46,23 @@ public class ModificationHistory {
 		default:
 			break;
 		}
-		this.setCheckedChange(sc,false);
+		this.changeHistory.put(sc,false);
 	}
 	
-	public void setCheckedChange(SourceCodeChange sc, boolean checked) {
-		this.changeHistory.put(sc,checked);
+	public void setCheckedChange(SourceCodeChange sc) throws Exception{
+		if(this.changeHistory.containsKey(sc))
+			this.changeHistory.put(sc,true);
+		else
+			throw new Exception("Source Code Change not Found: "+sc+". Root Entity: "+sc.getRootEntity());
+		
+	}
+	
+	public void setUncheckedChange(SourceCodeChange sc) throws Exception {
+		if(this.changeHistory.containsKey(sc))
+			this.changeHistory.put(sc,false);
+		else
+			throw new Exception("Source Code Change not Found");
+		
 	}
 	
 	public boolean isChecked(SourceCodeChange sc) {
