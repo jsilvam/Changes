@@ -127,12 +127,18 @@ public class Purity {
 		}
 		dir.delete();
 	}
+	
+	
 
 	private class Teste{
 		String m;
 		
 		private int getM() {
 			return m;
+		}
+		
+		private void setMi(String m1) {
+			m=m1;
 		}
 		
 		

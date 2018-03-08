@@ -126,6 +126,7 @@ public class Purity{
 
 	private class Teste{
 		String m;
+		int p;
 		
 		private int getM() {
 			return m;
@@ -133,7 +134,6 @@ public class Purity{
 		
 		private void setMi(String m1) {
 			m=m1;
-			return;
 		}
 		
 	}
