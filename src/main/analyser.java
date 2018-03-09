@@ -40,38 +40,54 @@ public class analyser {
 					analiseExtractedMethod(scc.getRootEntity());
 				}else if (refactorings.isInlinedMethod(scc.getRootEntity().getUniqueName())) {
 					analiseInlinedMethod(scc.getRootEntity());
+				}else if(scc.getChangedEntity().getType().isMethod()){
+					String method = scc.getChangedEntity().getUniqueName();
+					if (refactorings.isMovedMethod(method))  
+						analiseMovedAttribute(scc, method);
+					else
+						this.sourceCodeChanges.add(scc);
 				}else if(scc.getChangedEntity().getType().isField()){
-					scc.getChangedEntity();
-					if (refactorings.isMovedAttribute("")) {
-					}
-				}
-				
+					String field = scc.getChangedEntity().getUniqueName();
+					int index = field.indexOf(" : ");
+					field = field.substring(0, index);
+					if (refactorings.isMovedAttribute(field))  
+						analiseMovedAttribute(scc, field);
+					else
+						this.sourceCodeChanges.add(scc);
+				}else if(scc.getChangedEntity().getType().isClass()){
+					String clazz = scc.getChangedEntity().getUniqueName();
+					if(!refactorings.isRefactoredClass(clazz))
+						this.sourceCodeChanges.add(scc);
+				}else
+					this.sourceCodeChanges.add(scc);
 			}	
 		}
 	}
 	
 	//verify only if the entities if entities are equal, not similar.
 	private void analiseExtractedMethod(StructureEntityVersion root) {
-		List<SourceCodeChange> changes=root.getSourceCodeChanges();
-		SourceCodeChange method=modificationHistory.getCreatedMethod(root.getUniqueName());
+		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
+		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
+		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		
-		while(body.hasMoreElements()) {
-			Node node=body.nextElement();
-			node.disableMatched();
-			for(SourceCodeChange scc: changes) {
-				if(node.getEntity().equals(scc.getChangedEntity())) {
-					try {
+		try {
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				node.disableMatched();
+				for(SourceCodeChange scc: changes) {
+					if(node.getEntity().equals(scc.getChangedEntity())) {	
 						modificationHistory.setCheckedChange(scc);
-						modificationHistory.setCheckedChange(method);
 						changes.remove(scc);
 						node.enableMatched();
-					} catch (Exception e) {
-						e.printStackTrace();
 					}
 				}
 			}
+			modificationHistory.setCheckedChange(method);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		
 		
 		body = method.getBodyStructure().preorderEnumeration();
 		while(body.hasMoreElements()) {
@@ -96,25 +112,27 @@ public class analyser {
 	
 	//verify only if the entities if entities are equal, not similar.
 	private void analiseInlinedMethod(StructureEntityVersion root) {
-		List<SourceCodeChange> changes=root.getSourceCodeChanges();
-		SourceCodeChange method=modificationHistory.getDeletedMethod(root.getUniqueName());
+		String deletedMethod = this.refactorings.getInlinedMethodSignature(root.getUniqueName());
+		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
+		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		
-		while(body.hasMoreElements()) {
-			Node node=body.nextElement();
-			node.disableMatched();
-			for(SourceCodeChange scc: changes) {
-				if(node.getEntity().equals(scc.getChangedEntity())) {
-					try {
+
+		try {
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				node.disableMatched();
+				for(SourceCodeChange scc: changes) {
+					if(node.getEntity().equals(scc.getChangedEntity())) {
 						modificationHistory.setCheckedChange(scc);
-						modificationHistory.setCheckedChange(method);
 						changes.remove(scc);
-						node.enableMatched();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+						node.enableMatched();		
 				}
 			}
+		}
+		modificationHistory.setCheckedChange(method);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		
 		body = method.getBodyStructure().preorderEnumeration();
@@ -138,11 +156,36 @@ public class analyser {
 		}	
 	}
 	
-	private void analiseMovedAttribute(SourceCodeChange root) {
+	private void analiseMovedAttribute(SourceCodeChange oldField, String oldSignature) {
+		String newSignature = this.refactorings.getMovedAttributeSignature(oldSignature);
+		if(newSignature == null)
+			return;
+		
+		SourceCodeChange newField = this.modificationHistory.getCreatedField(newSignature);
+		StructureEntityVersion rootEntity = newField.getStructureEntityVersion();
+	    List<SourceCodeChange> changes = extractChanges(oldField.getDeclarationStructure(), newField.getDeclarationStructure(), rootEntity); 
+	    this.sourceCodeChanges.addAll(changes);
+	}
+	
+	private void analiseMovedMethod(SourceCodeChange oldMethod, String oldSignature) {
+		String newSignature = this.refactorings.getMovedAttributeSignature(oldSignature);
+		if(newSignature == null)
+			return;
+		
+		SourceCodeChange newMethod = this.modificationHistory.getCreatedField(newSignature);
+	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
+	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity); 
+	    this.sourceCodeChanges.addAll(changes);
+	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity); 
+	    this.sourceCodeChanges.addAll(changes);
+	}
+	
+	
+	private List<SourceCodeChange> extractChanges(Node left, Node right, StructureEntityVersion rootEntity) {
 		Injector injector = Guice.createInjector(new JavaChangeDistillerModule());
 	    DistillerFactory df = injector.getInstance(DistillerFactory.class);
-	    
-	    Distiller distille = df.create(root.getStructureEntityVersion());
-//	    distille.extractClassifiedSourceCodeChanges(scc1.getDeclarationStructure(), scc2.getDeclarationStructure());
-	}
+        Distiller distiller = df.create(rootEntity);
+        distiller.extractClassifiedSourceCodeChanges(left, right);
+        return distiller.getSourceCodeChanges();
+    }
 }

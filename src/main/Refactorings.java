@@ -127,6 +127,13 @@ public class Refactorings {
 	public boolean isInlinedMethod(String signature) {
 		return (this.inlinedMethods.containsKey(signature) || this.inlinedMethods.containsValue(signature));
 	}
+	
+	//needs better name
+	public boolean isRefactoredClass(String signature) {
+		return (this.changedClassSignatures.containsKey(signature) || 
+				this.changedClassSignatures.containsValue(signature) ||
+				this.addedClasses.contains(signature));
+	}
 
 	public Map<String, String> getChangedClassSignatures() {
 		return changedClassSignatures;
@@ -152,6 +159,23 @@ public class Refactorings {
 		return inlinedMethods;
 	}
 
+	public String getExtractedMethodSignature(String signature) {
+		return extractedMethods.get(signature);
+	}
+
+	public String getInlinedMethodSignature(String signature) {
+		return inlinedMethods.get(signature);
+	}
+
+	public String getMovedAttributeSignature(String signature) {
+		return movedAttributes.get(signature);
+	}
+
+	public String getMovedMethodSignature(String signature) {
+		return movedMethods.get(signature);
+	}
+	
+	
 	public List<String> getChangedMethods() {
 		return changedMethods;
 	}
