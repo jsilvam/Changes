@@ -12,10 +12,13 @@ import ch.uzh.ifi.seal.changedistiller.ast.java.JavaSourceCodeChangeClassifier;
 import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
 import ch.uzh.ifi.seal.changedistiller.distilling.SourceCodeChangeClassifier;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
+import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 import ch.uzh.ifi.seal.changedistiller.model.entities.StructureEntityVersion;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Update;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 
 public class analyser {
@@ -70,6 +73,7 @@ public class analyser {
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
+		List<Update> updates = new LinkedList<Update>();
 		
 		try {
 			while(body.hasMoreElements()) {
@@ -80,6 +84,8 @@ public class analyser {
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
+					}else if(isSameEntityType(node,scc)) {
+						
 					}
 				}
 			}
@@ -180,6 +186,11 @@ public class analyser {
 	    this.sourceCodeChanges.addAll(changes);
 	}
 	
+	private boolean isSameEntityType(Node node, SourceCodeChange scc) {
+		EntityType et1 = node.getEntity().getType();
+		EntityType et2 = scc.getChangedEntity().getType();
+		return et1.equals(et2);
+	}
 	
 	private List<SourceCodeChange> extractChanges(Node left, Node right, StructureEntityVersion rootEntity) {
 		Injector injector = Guice.createInjector(new JavaChangeDistillerModule());
