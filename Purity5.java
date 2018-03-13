@@ -125,8 +125,7 @@ public class Purity{
 	}
 
 	private class Teste{
-		String m;
-		int p;
+		String maria;
 		
 		private int getM() {
 			return m;

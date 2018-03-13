@@ -131,7 +131,7 @@ public class Purity {
 	
 
 	private class Teste{
-		String m;
+		String mari;
 		
 		private int getM() {
 			return m;
