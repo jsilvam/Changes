@@ -4,6 +4,8 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
@@ -11,9 +13,11 @@ import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
 import ch.uzh.ifi.seal.changedistiller.ast.java.JavaSourceCodeChangeClassifier;
 import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.ChangeType;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Move;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 import ch.uzh.ifi.seal.changedistiller.model.entities.StructureEntityVersion;
@@ -88,7 +92,9 @@ public class analyser {
 				Node node=body.nextElement();
 				node.disableMatched();
 				for(SourceCodeChange scc: changes) {
-					if(node.getEntity().equals(scc.getChangedEntity())) {	
+					if(isSameEntity(node,scc)
+							//Verify only parent's type or full data?
+							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getChangedEntity())) {	
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
@@ -98,21 +104,44 @@ public class analyser {
 			}
 		
 			body = method.getBodyStructure().preorderEnumeration();
+			
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
 					for(SourceCodeChange scc: changes) {
-						if(this.isLeafUpdate(node, scc)) {
-							Node parent=(Node) node.getParent();
-							SourceCodeChange scc1 = classifier.classify(
-									new Update(method.getStructureEntityVersion(),node.getEntity(), scc.getChangedEntity(), parent.getEntity()));
-							if ((scc != null) && !sourceCodeChanges.contains(scc1)) {
-								sourceCodeChanges.add(scc1);
-								modificationHistory.setCheckedChange(scc);
-								changes.remove(scc);
-								node.enableMatched();
-								break;
+						if(!this.modificationHistory.isChecked(scc)
+								&& isSameEntityType(node.getEntity(),scc.getChangedEntity())
+								&& similarity(node,scc) >= this.lTh) {
+							if(!isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
+								Node parent=(Node) node.getParent();
+								SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+										new Move(method.getStructureEntityVersion(),
+										scc.getChangedEntity(),
+										node.getEntity(),
+										scc.getParentEntity(),
+										((Node)node.getParent()).getEntity()));
+								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
+									sourceCodeChanges.add(scc1);
+									modificationHistory.setCheckedChange(scc);
+									changes.remove(scc);
+									node.enableMatched();
+								}
 							}
+							if(!isSameEntity(node, scc)) {
+								Node parent=(Node) node.getParent();
+								SourceCodeChange scc1 = classifier.classify(
+										new Update(method.getStructureEntityVersion(),
+												node.getEntity(),
+												scc.getChangedEntity(),
+												parent.getEntity()));
+								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
+									sourceCodeChanges.add(scc1);
+									modificationHistory.setCheckedChange(scc);
+									changes.remove(scc);
+									node.enableMatched();
+								}
+							}
+							break;
 						}
 					}
 					
@@ -214,18 +243,29 @@ public class analyser {
 	}
 	
 	private boolean isLeafUpdate(Node node, SourceCodeChange scc) {
-		if(node.isLeaf() && isSameEntityType(node,scc)) {
-			SourceCodeEntity sce1= node.getEntity();
-			SourceCodeEntity sce2= scc.getChangedEntity();
-			return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName()) >= this.lTh;
+		if(node.isLeaf() && isSameEntityType(node.getEntity(),scc.getChangedEntity())) {
+			return similarity(node,scc) >= this.lTh;
 		}
 		return false;
 	}
 	
-	private boolean isSameEntityType(Node node, SourceCodeChange scc) {
-		EntityType et1 = node.getEntity().getType();
-		EntityType et2 = scc.getChangedEntity().getType();
+	private double similarity(Node node, SourceCodeChange scc) {
+		SourceCodeEntity sce1= node.getEntity();
+		SourceCodeEntity sce2= scc.getChangedEntity();
+		return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName());
+	}
+	
+	private boolean isSameEntityType(SourceCodeEntity entity1, SourceCodeEntity entity2) {
+		EntityType et1 = entity1.getType();
+		EntityType et2 = entity2.getType();
 		return et1.equals(et2);
+	}
+	
+	private boolean isSameEntity(Node node, SourceCodeChange scc) {
+		SourceCodeEntity e1 = node.getEntity();
+		SourceCodeEntity e2 = scc.getChangedEntity();
+		return new EqualsBuilder().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())
+                .append(e1.getModifiers(), e2.getModifiers()).isEquals();
 	}
 	
 	private List<SourceCodeChange> extractChanges(Node left, Node right, StructureEntityVersion rootEntity) {

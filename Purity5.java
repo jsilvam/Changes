@@ -107,7 +107,7 @@ public class Purity{
 		Report result=sr.getReport();
 		
 		deleteDirectory(git.getLocation());
-		if(result.isRefactoring())
+		if(result.isRefactoring()) 
 			return 1;
 		else
 			return 0;

@@ -93,7 +93,7 @@ public class Purity {
 		
 		
 		Parameters parameters = new Parameters();
-		parameters.setTimeLimit(10);
+		parameters.setTimeLimit(120);
 		//parameters.setCheckCoverage(true);
 		parameters.setCompileProjects(true);
 		SafeRefactor sr = new SafeRefactorImp(source, target,parameters);
@@ -110,7 +110,7 @@ public class Purity {
 		Report result=sr.getReport();
 		
 		deleteDirectory(git.getLocation());
-		if(result.isRefactoring())
+		if(!result.isRefactoring()) 
 			return 1;
 		else
 			return 0;
