@@ -93,7 +93,7 @@ public class Purity {
 		
 		
 		Parameters parameters = new Parameters();
-		parameters.setTimeLimit(120);
+		parameters.setTimeLimit(10);
 		//parameters.setCheckCoverage(true);
 		parameters.setCompileProjects(true);
 		SafeRefactor sr = new SafeRefactorImp(source, target,parameters);
@@ -131,7 +131,7 @@ public class Purity {
 	
 
 	private class Teste{
-		String mari;
+		String maria;
 		
 		private int getM() {
 			return m;

@@ -11,7 +11,6 @@ import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
 import ch.uzh.ifi.seal.changedistiller.ast.java.JavaSourceCodeChangeClassifier;
 import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
-import ch.uzh.ifi.seal.changedistiller.distilling.SourceCodeChangeClassifier;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
@@ -20,19 +19,27 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 import ch.uzh.ifi.seal.changedistiller.model.entities.StructureEntityVersion;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Update;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
+import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.LevenshteinSimilarityCalculator;
+import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.NGramsCalculator;
+import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.StringSimilarityCalculator;
 
 public class analyser {
 	
 	private Refactorings refactorings;
 	private ModificationHistory modificationHistory;
 	private List<SourceCodeChange> sourceCodeChanges;
+	private	StringSimilarityCalculator strSimCalc;
+	private double lTh;
 	private JavaSourceCodeChangeClassifier classifier;
+	
 	
 	public analyser(Refactorings refactorings, ModificationHistory modificationHistory) {
 		this.refactorings = refactorings;
 		this.modificationHistory = modificationHistory;
 		this.sourceCodeChanges = new LinkedList<SourceCodeChange>();
+		this.strSimCalc = new NGramsCalculator(2);
 		this.classifier = new JavaSourceCodeChangeClassifier();
+		this.lTh= 0.6;
 	}
 	
 	
@@ -67,7 +74,8 @@ public class analyser {
 		}
 	}
 	
-	//verify only if the entities if entities are equal, not similar.
+	//verify if the entities are equal or, if it is a leaf, if it is similar
+	//Do I remove the leaf verification?
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
@@ -84,16 +92,36 @@ public class analyser {
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
-					}else if(isSameEntityType(node,scc)) {
-						
+						break;
 					}
 				}
 			}
-			modificationHistory.setCheckedChange(method);
+		
+			body = method.getBodyStructure().preorderEnumeration();
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				if(!node.isMatched()) {
+					for(SourceCodeChange scc: changes) {
+						if(this.isLeafUpdate(node, scc)) {
+							Node parent=(Node) node.getParent();
+							SourceCodeChange scc1 = classifier.classify(
+									new Update(method.getStructureEntityVersion(),node.getEntity(), scc.getChangedEntity(), parent.getEntity()));
+							if ((scc != null) && !sourceCodeChanges.contains(scc1)) {
+								sourceCodeChanges.add(scc1);
+								modificationHistory.setCheckedChange(scc);
+								changes.remove(scc);
+								node.enableMatched();
+								break;
+							}
+						}
+					}
+					
+				}
+			}
+		modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
 		
 		body = method.getBodyStructure().preorderEnumeration();
 		while(body.hasMoreElements()) {
@@ -111,12 +139,11 @@ public class analyser {
 		for(SourceCodeChange scc: changes) {
 			if (!sourceCodeChanges.contains(scc)) {
 				sourceCodeChanges.add(scc);
-			}
-			
+			}	
 		}	
 	}
 	
-	//verify only if the entities if entities are equal, not similar.
+	//verify if the entities are equal or, if it is a leaf, if it is similar
 	private void analiseInlinedMethod(StructureEntityVersion root) {
 		String deletedMethod = this.refactorings.getInlinedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
@@ -184,6 +211,15 @@ public class analyser {
 	    this.sourceCodeChanges.addAll(changes);
 	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity); 
 	    this.sourceCodeChanges.addAll(changes);
+	}
+	
+	private boolean isLeafUpdate(Node node, SourceCodeChange scc) {
+		if(node.isLeaf() && isSameEntityType(node,scc)) {
+			SourceCodeEntity sce1= node.getEntity();
+			SourceCodeEntity sce2= scc.getChangedEntity();
+			return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName()) >= this.lTh;
+		}
+		return false;
 	}
 	
 	private boolean isSameEntityType(Node node, SourceCodeChange scc) {
