@@ -110,7 +110,7 @@ public class Purity {
 		Report result=sr.getReport();
 		
 		deleteDirectory(git.getLocation());
-		if(!result.isRefactoring()) 
+		if(result.isRefactoring()) 
 			return 1;
 		else
 			return 0;
@@ -131,13 +131,13 @@ public class Purity {
 	
 
 	private class Teste{
-		String maria;
+		String m;
 		
 		private int getM() {
 			return m;
 		}
 		
-		private void setMi(String m1) {
+		private void setM(String m1) {
 			m=m1;
 		}
 		

@@ -58,7 +58,9 @@ public class analyser {
 					String method = scc.getChangedEntity().getUniqueName();
 					if (refactorings.isMovedMethod(method))  
 						analiseMovedAttribute(scc, method);
-					else
+					else if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
+							&& refactorings.isExtractedMethod(scc.getChangedEntity().getUniqueName())
+							&& refactorings.isInlinedMethod(scc.getChangedEntity().getUniqueName()))
 						this.sourceCodeChanges.add(scc);
 				}else if(scc.getChangedEntity().getType().isField()){
 					String field = scc.getChangedEntity().getUniqueName();
@@ -85,7 +87,6 @@ public class analyser {
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
-		List<Update> updates = new LinkedList<Update>();
 		
 		try {
 			while(body.hasMoreElements()) {
@@ -94,7 +95,7 @@ public class analyser {
 				for(SourceCodeChange scc: changes) {
 					if(isSameEntity(node,scc)
 							//Verify only parent's type or full data?
-							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getChangedEntity())) {	
+							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
@@ -237,6 +238,7 @@ public class analyser {
 		SourceCodeChange newMethod = this.modificationHistory.getCreatedField(newSignature);
 	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
 	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity); 
+	    //still have to filter the rename changes
 	    this.sourceCodeChanges.addAll(changes);
 	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity); 
 	    this.sourceCodeChanges.addAll(changes);
