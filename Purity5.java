@@ -131,7 +131,7 @@ public class Purity{
 			return m;
 		}
 		
-		private void setMi(String m1) {
+		private void setM(String m1, int g, String gh) {
 			m=m1;
 		}
 		

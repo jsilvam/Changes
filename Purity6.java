@@ -132,12 +132,13 @@ public class Purity {
 
 	private class Teste{
 		String m;
+		private int contador;
 		
 		private int getM() {
 			return m;
 		}
 		
-		private void setM(String m1) {
+		private void setM(String m1, int g, String gh) {
 			m=m1;
 		}
 		

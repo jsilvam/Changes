@@ -26,6 +26,7 @@ import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.LevenshteinSimilarityCalculator;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.NGramsCalculator;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.StringSimilarityCalculator;
+import utils.CallerAnaliser;
 
 public class analyser {
 	
@@ -48,6 +49,10 @@ public class analyser {
 	
 	
 	public void analise() {
+		CallerAnaliser ca = new CallerAnaliser();
+		ca.extractShortNames(refactorings);
+		ca.markCallers(modificationHistory);
+		
 		for(SourceCodeChange scc: modificationHistory.getChangeHistory().keySet()) {
 			if(!modificationHistory.isChecked(scc)) {
 				if(refactorings.isExtractedMethod(scc.getRootEntity().getUniqueName())) {
@@ -57,10 +62,10 @@ public class analyser {
 				}else if(scc.getChangedEntity().getType().isMethod()){
 					String method = scc.getChangedEntity().getUniqueName();
 					if (refactorings.isMovedMethod(method))  
-						analiseMovedAttribute(scc, method);
+						analiseMovedMethod(scc, method);
 					else if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
-							&& refactorings.isExtractedMethod(scc.getChangedEntity().getUniqueName())
-							&& refactorings.isInlinedMethod(scc.getChangedEntity().getUniqueName()))
+							&& !refactorings.isExtractedMethod(scc.getChangedEntity().getUniqueName())
+							&& !refactorings.isInlinedMethod(scc.getChangedEntity().getUniqueName()))
 						this.sourceCodeChanges.add(scc);
 				}else if(scc.getChangedEntity().getType().isField()){
 					String field = scc.getChangedEntity().getUniqueName();
@@ -186,13 +191,61 @@ public class analyser {
 				Node node=body.nextElement();
 				node.disableMatched();
 				for(SourceCodeChange scc: changes) {
-					if(node.getEntity().equals(scc.getChangedEntity())) {
+					if(isSameEntity(node,scc)
+							//Verify only parent's type or full data?
+							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
-						node.enableMatched();		
+						node.enableMatched();
+						break;
+					}
 				}
 			}
-		}
+		
+			body = method.getBodyStructure().preorderEnumeration();
+			
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				if(!node.isMatched()) {
+					for(SourceCodeChange scc: changes) {
+						if(!this.modificationHistory.isChecked(scc)
+								&& isSameEntityType(node.getEntity(),scc.getChangedEntity())
+								&& similarity(node,scc) >= this.lTh) {
+							if(!isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
+								Node parent=(Node) node.getParent();
+								SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+										new Move(method.getStructureEntityVersion(),
+										scc.getChangedEntity(),
+										node.getEntity(),
+										scc.getParentEntity(),
+										((Node)node.getParent()).getEntity()));
+								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
+									sourceCodeChanges.add(scc1);
+									modificationHistory.setCheckedChange(scc);
+									changes.remove(scc);
+									node.enableMatched();
+								}
+							}
+							if(!isSameEntity(node, scc)) {
+								Node parent=(Node) node.getParent();
+								SourceCodeChange scc1 = classifier.classify(
+										new Update(method.getStructureEntityVersion(),
+												node.getEntity(),
+												scc.getChangedEntity(),
+												parent.getEntity()));
+								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
+									sourceCodeChanges.add(scc1);
+									modificationHistory.setCheckedChange(scc);
+									changes.remove(scc);
+									node.enableMatched();
+								}
+							}
+							break;
+						}
+					}
+					
+				}
+			}
 		modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -231,11 +284,11 @@ public class analyser {
 	}
 	
 	private void analiseMovedMethod(SourceCodeChange oldMethod, String oldSignature) {
-		String newSignature = this.refactorings.getMovedAttributeSignature(oldSignature);
+		String newSignature = this.refactorings.getMovedMethodSignature(oldSignature);
 		if(newSignature == null)
 			return;
 		
-		SourceCodeChange newMethod = this.modificationHistory.getCreatedField(newSignature);
+		SourceCodeChange newMethod = this.modificationHistory.getCreatedMethod(newSignature);
 	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
 	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity); 
 	    //still have to filter the rename changes

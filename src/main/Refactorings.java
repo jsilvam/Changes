@@ -18,7 +18,7 @@ public class Refactorings {
 	
 	private List<String> addedClasses;
 	
-	private List<String> changedMethods; //very low probability of use
+	private Map<String, String> renamedMethods;
 	
 	
 	private String parent;
@@ -34,9 +34,9 @@ public class Refactorings {
 		this.movedAttributes = new HashMap<String,String>();
 		this.extractedMethods = new HashMap<String,String>();
 		this.inlinedMethods = new HashMap<String,String>();
+		this.renamedMethods = new HashMap<String,String>();
 		
 		this.addedClasses = new ArrayList<String>();
-		this.changedMethods = new ArrayList<String>();
 		
 		
 		Scanner in = new Scanner(new FileReader(csvPath)).useDelimiter(";");
@@ -61,13 +61,15 @@ public class Refactorings {
 						key=in.next();
 						this.inlinedMethods.put(key, value);
 						break;
-					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, does nothing.
+					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, is saved as renamedMethod.
 						key=in.next();
 						value=in.next();
 						String before=key.substring(0, key.lastIndexOf("."));
 						String after=value.substring(0, value.indexOf("."));
 						if(!before.equals(after))
 							this.movedMethods.put(key, value);
+						else
+							this.renamedMethods.put(key, value);
 						break;
 					case "Pull Up Method":
 					case "Push Down Method":
@@ -176,8 +178,8 @@ public class Refactorings {
 	}
 	
 	
-	public List<String> getChangedMethods() {
-		return changedMethods;
+	public Map<String,String> getChangedMethods() {
+		return renamedMethods;
 	}
 
 	public String getParent() {
