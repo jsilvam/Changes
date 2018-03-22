@@ -110,6 +110,7 @@ public class Main {
 		    	
 		    	System.out.println("\nbegin");
 		    	System.out.println("change.getLabel():  "+change.getLabel());
+		    	System.out.println("change.getChangeType():  "+change.getChangeType());
 		        System.out.println("change.toString():  "+change.toString());
 //		        mh.addChange(change);
 //		        System.out.println();

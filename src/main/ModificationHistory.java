@@ -1,9 +1,15 @@
 package main;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.ChangeType;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
+import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 
 public class ModificationHistory {
 	
@@ -12,7 +18,8 @@ public class ModificationHistory {
 	private Map<String,SourceCodeChange> deletedMethods;
 	private Map<String,SourceCodeChange> createdFields;
 	private Map<String,SourceCodeChange> deletedFields;
-	
+	private Map<String,SourceCodeChange> createdClasses;
+	private Map<String,SourceCodeChange> deletedClasses;
 
 	public ModificationHistory() {
 		changeHistory = new HashMap<SourceCodeChange,Boolean>();
@@ -20,6 +27,13 @@ public class ModificationHistory {
 		deletedMethods = new HashMap<String,SourceCodeChange>();
 		createdFields = new HashMap<String,SourceCodeChange>();
 		deletedFields = new HashMap<String,SourceCodeChange>();
+		createdClasses = new HashMap<String,SourceCodeChange>();
+		deletedClasses = new HashMap<String,SourceCodeChange>();
+	}
+	
+	public void addAllChanges(List<SourceCodeChange> changes) {
+		for(SourceCodeChange scc: changes)
+			addChange(scc);
 	}
 	
 	public void addChange(SourceCodeChange sc) {
@@ -34,13 +48,11 @@ public class ModificationHistory {
 		case ADDITIONAL_OBJECT_STATE:
 			field=sc.getChangedEntity().getUniqueName();
 			field=field.substring(0, field.indexOf(" : "));
-			System.out.println(field);
 			createdFields.put(field, sc);
 			break;
 		case REMOVED_OBJECT_STATE:
 			field=sc.getChangedEntity().getUniqueName();
 			field=field.substring(0, field.indexOf(" : "));
-			System.out.println(field);
 			deletedFields.put(sc.getChangedEntity().getUniqueName(), sc);
 			break;
 		default:
@@ -92,6 +104,27 @@ public class ModificationHistory {
 	public SourceCodeChange getDeletedField(String signature) {
 		return deletedFields.get(signature);
 	}
+	
+	public void addCreatedClass(String signature) {
+		SourceCodeEntity sce = new SourceCodeEntity(signature,JavaEntityType.CLASS,null);
+		Insert ins = new Insert(ChangeType.ADDITIONAL_CLASS,null,sce,null);
+		this.createdClasses.put(signature, ins);
+	}
+	
+	public void addDeletedClass(String signature) {
+		SourceCodeEntity sce = new SourceCodeEntity(signature,JavaEntityType.CLASS,null);
+		Delete del = new Delete(ChangeType.REMOVED_CLASS,null,sce,null);
+		this.deletedClasses.put(signature, del);
+	}
+
+	public Map<String, SourceCodeChange> getCreatedClasses() {
+		return createdClasses;
+	}
+
+	public Map<String, SourceCodeChange> getDeletedClasses() {
+		return deletedClasses;
+	}
+	
 	
 	
 }

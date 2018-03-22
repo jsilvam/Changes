@@ -177,8 +177,11 @@ public class Refactorings {
 		return movedMethods.get(signature);
 	}
 	
+	public String getNewClassSignature(String signature) {
+		return changedClassSignatures.get(signature);
+	}
 	
-	public Map<String,String> getChangedMethods() {
+	public Map<String,String> getRenamedMethods() {
 		return renamedMethods;
 	}
 

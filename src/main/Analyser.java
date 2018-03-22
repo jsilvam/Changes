@@ -23,35 +23,37 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 import ch.uzh.ifi.seal.changedistiller.model.entities.StructureEntityVersion;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Update;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
-import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.LevenshteinSimilarityCalculator;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.NGramsCalculator;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.StringSimilarityCalculator;
-import utils.CallerAnaliser;
+import utils.CallerAnalyser;
 
-public class analyser {
+public class Analyser {
 	
 	private Refactorings refactorings;
 	private ModificationHistory modificationHistory;
-	private List<SourceCodeChange> sourceCodeChanges;
+	private List<SourceCodeChange> verifiedSourceCodeChanges;
 	private	StringSimilarityCalculator strSimCalc;
 	private double lTh;
 	private JavaSourceCodeChangeClassifier classifier;
+	private CallerAnalyser callerAnalyser;
 	
-	
-	public analyser(Refactorings refactorings, ModificationHistory modificationHistory) {
+	public Analyser(Refactorings refactorings, ModificationHistory modificationHistory) {
 		this.refactorings = refactorings;
 		this.modificationHistory = modificationHistory;
-		this.sourceCodeChanges = new LinkedList<SourceCodeChange>();
+		this.verifiedSourceCodeChanges = new LinkedList<SourceCodeChange>();
 		this.strSimCalc = new NGramsCalculator(2);
 		this.classifier = new JavaSourceCodeChangeClassifier();
+		this.callerAnalyser = new CallerAnalyser();
 		this.lTh= 0.6;
 	}
 	
+	public List<SourceCodeChange> getVerifiedSourceCodeChanges(){
+		return this.verifiedSourceCodeChanges;
+	}
 	
-	public void analise() {
-		CallerAnaliser ca = new CallerAnaliser();
-		ca.extractShortNames(refactorings);
-		ca.markCallers(modificationHistory);
+	public void analyse() {
+		callerAnalyser.extractShortNames(refactorings);
+		callerAnalyser.markCallers(modificationHistory);
 		
 		for(SourceCodeChange scc: modificationHistory.getChangeHistory().keySet()) {
 			if(!modificationHistory.isChecked(scc)) {
@@ -66,7 +68,7 @@ public class analyser {
 					else if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
 							&& !refactorings.isExtractedMethod(scc.getChangedEntity().getUniqueName())
 							&& !refactorings.isInlinedMethod(scc.getChangedEntity().getUniqueName()))
-						this.sourceCodeChanges.add(scc);
+						this.verifiedSourceCodeChanges.add(scc);
 				}else if(scc.getChangedEntity().getType().isField()){
 					String field = scc.getChangedEntity().getUniqueName();
 					int index = field.indexOf(" : ");
@@ -74,14 +76,26 @@ public class analyser {
 					if (refactorings.isMovedAttribute(field))  
 						analiseMovedAttribute(scc, field);
 					else
-						this.sourceCodeChanges.add(scc);
+						this.verifiedSourceCodeChanges.add(scc);
 				}else if(scc.getChangedEntity().getType().isClass()){
 					String clazz = scc.getChangedEntity().getUniqueName();
 					if(!refactorings.isRefactoredClass(clazz))
-						this.sourceCodeChanges.add(scc);
+						this.verifiedSourceCodeChanges.add(scc);
 				}else
-					this.sourceCodeChanges.add(scc);
+					this.verifiedSourceCodeChanges.add(scc);
 			}	
+		}
+		
+		for(SourceCodeChange scc: modificationHistory.getCreatedClasses().values()) {
+			String clazz = scc.getChangedEntity().getUniqueName();
+			if(!refactorings.isRefactoredClass(clazz))
+				this.verifiedSourceCodeChanges.add(scc);
+		}
+		
+		for(SourceCodeChange scc: modificationHistory.getDeletedClasses().values()) {
+			String clazz = scc.getChangedEntity().getUniqueName();
+			if(!refactorings.isRefactoredClass(clazz))
+				this.verifiedSourceCodeChanges.add(scc);
 		}
 	}
 	
@@ -126,8 +140,8 @@ public class analyser {
 										node.getEntity(),
 										scc.getParentEntity(),
 										((Node)node.getParent()).getEntity()));
-								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
-									sourceCodeChanges.add(scc1);
+								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+									verifiedSourceCodeChanges.add(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -140,8 +154,8 @@ public class analyser {
 												node.getEntity(),
 												scc.getChangedEntity(),
 												parent.getEntity()));
-								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
-									sourceCodeChanges.add(scc1);
+								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+									verifiedSourceCodeChanges.add(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -153,29 +167,31 @@ public class analyser {
 					
 				}
 			}
-		modificationHistory.setCheckedChange(method);
+			body = method.getBodyStructure().preorderEnumeration();
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				if(!node.isMatched()) {
+					Node parent=(Node) node.getParent();
+					SourceCodeChange scc = classifier.classify(
+							new Insert(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
+					if ((scc != null) && !verifiedSourceCodeChanges.contains(scc)) {
+						verifiedSourceCodeChanges.add(scc);
+					}	
+				}
+			}
+			
+			for(SourceCodeChange scc: changes) {
+				if (!verifiedSourceCodeChanges.contains(scc)) {
+					verifiedSourceCodeChanges.add(scc);
+					modificationHistory.setCheckedChange(scc);
+				}	
+			}
+			modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		body = method.getBodyStructure().preorderEnumeration();
-		while(body.hasMoreElements()) {
-			Node node=body.nextElement();
-			if(!node.isMatched()) {
-				Node parent=(Node) node.getParent();
-				SourceCodeChange scc = classifier.classify(
-						new Insert(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
-				if ((scc != null) && !sourceCodeChanges.contains(scc)) {
-					sourceCodeChanges.add(scc);
-				}	
-			}
-		}
-		
-		for(SourceCodeChange scc: changes) {
-			if (!sourceCodeChanges.contains(scc)) {
-				sourceCodeChanges.add(scc);
-			}	
-		}	
+			
 	}
 	
 	//verify if the entities are equal or, if it is a leaf, if it is similar
@@ -219,8 +235,8 @@ public class analyser {
 										node.getEntity(),
 										scc.getParentEntity(),
 										((Node)node.getParent()).getEntity()));
-								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
-									sourceCodeChanges.add(scc1);
+								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+									verifiedSourceCodeChanges.add(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -233,8 +249,8 @@ public class analyser {
 												node.getEntity(),
 												scc.getChangedEntity(),
 												parent.getEntity()));
-								if ((scc1 != null) && !sourceCodeChanges.contains(scc1)) {
-									sourceCodeChanges.add(scc1);
+								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+									verifiedSourceCodeChanges.add(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -246,30 +262,34 @@ public class analyser {
 					
 				}
 			}
-		modificationHistory.setCheckedChange(method);
+			
+			body = method.getBodyStructure().preorderEnumeration();
+			while(body.hasMoreElements()) {
+				Node node=body.nextElement();
+				if(!node.isMatched()) {
+					Node parent=(Node) node.getParent();
+					SourceCodeChange scc = classifier.classify(
+							new Delete(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
+					if (!verifiedSourceCodeChanges.contains(scc)) {
+						verifiedSourceCodeChanges.add(scc);
+					}	
+				}
+			}
+			
+			for(SourceCodeChange scc: changes) {
+				if ((scc != null) && !verifiedSourceCodeChanges.contains(scc)) {
+					verifiedSourceCodeChanges.add(scc);
+					modificationHistory.setCheckedChange(scc);
+				}
+				
+			}	
+			
+			modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		body = method.getBodyStructure().preorderEnumeration();
-		while(body.hasMoreElements()) {
-			Node node=body.nextElement();
-			if(!node.isMatched()) {
-				Node parent=(Node) node.getParent();
-				SourceCodeChange scc = classifier.classify(
-						new Delete(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
-				if (!sourceCodeChanges.contains(scc)) {
-					sourceCodeChanges.add(scc);
-				}	
-			}
-		}
 		
-		for(SourceCodeChange scc: changes) {
-			if ((scc != null) && !sourceCodeChanges.contains(scc)) {
-				sourceCodeChanges.add(scc);
-			}
-			
-		}	
 	}
 	
 	private void analiseMovedAttribute(SourceCodeChange oldField, String oldSignature) {
@@ -280,7 +300,14 @@ public class analyser {
 		SourceCodeChange newField = this.modificationHistory.getCreatedField(newSignature);
 		StructureEntityVersion rootEntity = newField.getStructureEntityVersion();
 	    List<SourceCodeChange> changes = extractChanges(oldField.getDeclarationStructure(), newField.getDeclarationStructure(), rootEntity); 
-	    this.sourceCodeChanges.addAll(changes);
+	    this.verifiedSourceCodeChanges.addAll(changes);
+	    try {
+	    	modificationHistory.setCheckedChange(oldField);
+			modificationHistory.setCheckedChange(newField);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void analiseMovedMethod(SourceCodeChange oldMethod, String oldSignature) {
@@ -290,11 +317,23 @@ public class analyser {
 		
 		SourceCodeChange newMethod = this.modificationHistory.getCreatedMethod(newSignature);
 	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
-	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity); 
-	    //still have to filter the rename changes
-	    this.sourceCodeChanges.addAll(changes);
-	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity); 
-	    this.sourceCodeChanges.addAll(changes);
+	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity);
+	    for(SourceCodeChange scc: changes) {
+	    	if(scc.getChangeType()!=ChangeType.METHOD_RENAMING)
+	    		this.verifiedSourceCodeChanges.add(scc);
+	    }
+	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity);
+	    for(SourceCodeChange scc: changes) {
+	    	if(!callerAnalyser.isCaller(scc))
+	    		this.verifiedSourceCodeChanges.add(scc);
+	    }
+	    try {
+	    	modificationHistory.setCheckedChange(oldMethod);
+			modificationHistory.setCheckedChange(newMethod);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private boolean isLeafUpdate(Node node, SourceCodeChange scc) {
