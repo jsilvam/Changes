@@ -20,7 +20,7 @@ public class CallerAnalyser {
 	}
 
 	
-	private String getShortName(String fullName) {
+	public String getShortName(String fullName) {
 		int lastIndex = fullName.indexOf("(");		
 		if(lastIndex<0)
 			return fullName.substring(fullName.lastIndexOf('.')+1);
@@ -61,14 +61,11 @@ public class CallerAnalyser {
 	
 	public void markCallers(ModificationHistory mh) {
 		try {
-			for(SourceCodeChange scc: mh.getChangeHistory().keySet()) {
-				SourceCodeEntity sce = scc.getChangedEntity();
-				if(sce.getType().isStatement()) 
-					for(String shortName: shortNames) 
-						if(sce.getUniqueName().contains(shortName)) {
-							mh.setCheckedChange(scc);
-							break;
-						}	
+			for(SourceCodeChange scc: mh.getChangeHistory().keySet()) { 
+				if(isCaller(scc)) {
+					mh.setCheckedChange(scc);
+					break;
+				}	
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -83,6 +80,15 @@ public class CallerAnalyser {
 				if(sce.getUniqueName().contains(shortName)) {
 					return true;
 				}
+		return false;
+	}
+	
+	public boolean isCaller(SourceCodeChange caller, SourceCodeChange callee) {
+		SourceCodeEntity calleeEntity = callee.getChangedEntity();
+		String shortName = getShortName(calleeEntity.getUniqueName());
+		SourceCodeEntity callerEntity = caller.getChangedEntity();
+		if(callerEntity.getType().isStatement()) 
+			return callerEntity.getUniqueName().contains(shortName);
 		return false;
 	}
 

@@ -78,7 +78,7 @@ public class ModificationHistory {
 	}
 	
 	public boolean isChecked(SourceCodeChange sc) {
-		return this.changeHistory.containsKey(sc) || this.changeHistory.get(sc);
+		return this.changeHistory.containsKey(sc) && this.changeHistory.get(sc);
 	}
 	
 	public boolean containsChange(SourceCodeChange sc) {

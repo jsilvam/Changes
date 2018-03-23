@@ -68,7 +68,7 @@ public class Analyser {
 					else if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
 							&& !refactorings.isExtractedMethod(scc.getChangedEntity().getUniqueName())
 							&& !refactorings.isInlinedMethod(scc.getChangedEntity().getUniqueName()))
-						this.verifiedSourceCodeChanges.add(scc);
+						addChange(scc);
 				}else if(scc.getChangedEntity().getType().isField()){
 					String field = scc.getChangedEntity().getUniqueName();
 					int index = field.indexOf(" : ");
@@ -76,26 +76,26 @@ public class Analyser {
 					if (refactorings.isMovedAttribute(field))  
 						analiseMovedAttribute(scc, field);
 					else
-						this.verifiedSourceCodeChanges.add(scc);
+						addChange(scc);
 				}else if(scc.getChangedEntity().getType().isClass()){
 					String clazz = scc.getChangedEntity().getUniqueName();
 					if(!refactorings.isRefactoredClass(clazz))
-						this.verifiedSourceCodeChanges.add(scc);
+						addChange(scc);
 				}else
-					this.verifiedSourceCodeChanges.add(scc);
+					addChange(scc);
 			}	
 		}
 		
 		for(SourceCodeChange scc: modificationHistory.getCreatedClasses().values()) {
 			String clazz = scc.getChangedEntity().getUniqueName();
 			if(!refactorings.isRefactoredClass(clazz))
-				this.verifiedSourceCodeChanges.add(scc);
+				addChange(scc);
 		}
 		
 		for(SourceCodeChange scc: modificationHistory.getDeletedClasses().values()) {
 			String clazz = scc.getChangedEntity().getUniqueName();
 			if(!refactorings.isRefactoredClass(clazz))
-				this.verifiedSourceCodeChanges.add(scc);
+				addChange(scc);
 		}
 	}
 	
@@ -104,10 +104,14 @@ public class Analyser {
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
+		if(method==null)//fix latter
+			return;
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		
+		
 		try {
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				node.disableMatched();
@@ -124,7 +128,7 @@ public class Analyser {
 			}
 		
 			body = method.getBodyStructure().preorderEnumeration();
-			
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
@@ -141,7 +145,7 @@ public class Analyser {
 										scc.getParentEntity(),
 										((Node)node.getParent()).getEntity()));
 								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									verifiedSourceCodeChanges.add(scc1);
+									addChange(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -154,8 +158,10 @@ public class Analyser {
 												node.getEntity(),
 												scc.getChangedEntity(),
 												parent.getEntity()));
-								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									verifiedSourceCodeChanges.add(scc1);
+								if ((scc1 != null) 
+										&& !verifiedSourceCodeChanges.contains(scc1)
+										&& !this.callerAnalyser.isCaller(scc1)) {
+									addChange(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -167,7 +173,9 @@ public class Analyser {
 					
 				}
 			}
+			
 			body = method.getBodyStructure().preorderEnumeration();
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
@@ -175,16 +183,20 @@ public class Analyser {
 					SourceCodeChange scc = classifier.classify(
 							new Insert(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
 					if ((scc != null) && !verifiedSourceCodeChanges.contains(scc)) {
-						verifiedSourceCodeChanges.add(scc);
+						addChange(scc);
 					}	
 				}
 			}
 			
+			
 			for(SourceCodeChange scc: changes) {
-				if (!verifiedSourceCodeChanges.contains(scc)) {
-					verifiedSourceCodeChanges.add(scc);
+				if (!verifiedSourceCodeChanges.contains(scc)
+						&& !this.callerAnalyser.isCaller(scc)
+						&& !this.callerAnalyser.isCaller(scc, method)) {
+					addChange(scc);
 					modificationHistory.setCheckedChange(scc);
-				}	
+				}else
+					modificationHistory.setCheckedChange(scc);
 			}
 			modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
@@ -203,6 +215,7 @@ public class Analyser {
 		
 
 		try {
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				node.disableMatched();
@@ -219,7 +232,7 @@ public class Analyser {
 			}
 		
 			body = method.getBodyStructure().preorderEnumeration();
-			
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
@@ -236,7 +249,7 @@ public class Analyser {
 										scc.getParentEntity(),
 										((Node)node.getParent()).getEntity()));
 								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									verifiedSourceCodeChanges.add(scc1);
+									addChange(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -249,8 +262,10 @@ public class Analyser {
 												node.getEntity(),
 												scc.getChangedEntity(),
 												parent.getEntity()));
-								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									verifiedSourceCodeChanges.add(scc1);
+								if ((scc1 != null) 
+										&& !verifiedSourceCodeChanges.contains(scc1)
+										&& !this.callerAnalyser.isCaller(scc1)) {
+									addChange(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
@@ -264,6 +279,7 @@ public class Analyser {
 			}
 			
 			body = method.getBodyStructure().preorderEnumeration();
+			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
@@ -271,17 +287,19 @@ public class Analyser {
 					SourceCodeChange scc = classifier.classify(
 							new Delete(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
 					if (!verifiedSourceCodeChanges.contains(scc)) {
-						verifiedSourceCodeChanges.add(scc);
+						addChange(scc);
 					}	
 				}
 			}
 			
 			for(SourceCodeChange scc: changes) {
-				if ((scc != null) && !verifiedSourceCodeChanges.contains(scc)) {
-					verifiedSourceCodeChanges.add(scc);
+				if ((scc != null) 
+						&& !verifiedSourceCodeChanges.contains(scc)
+						&& !this.callerAnalyser.isCaller(scc, method)) {
+					addChange(scc);
 					modificationHistory.setCheckedChange(scc);
-				}
-				
+				}else
+					modificationHistory.setCheckedChange(scc);
 			}	
 			
 			modificationHistory.setCheckedChange(method);
@@ -315,7 +333,11 @@ public class Analyser {
 		if(newSignature == null)
 			return;
 		
+		//Analyse signature incompability
 		SourceCodeChange newMethod = this.modificationHistory.getCreatedMethod(newSignature);
+		if(newMethod == null)
+			return;
+		
 	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
 	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity);
 	    for(SourceCodeChange scc: changes) {
@@ -369,4 +391,10 @@ public class Analyser {
         distiller.extractClassifiedSourceCodeChanges(left, right);
         return distiller.getSourceCodeChanges();
     }
+	
+	private void addChange(SourceCodeChange scc) {
+		if(scc!=null){
+			this.verifiedSourceCodeChanges.add(scc);
+		}
+	}
 }

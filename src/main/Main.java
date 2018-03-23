@@ -34,47 +34,47 @@ import utils.CSV;
 import utils.FileUtils;
 
 public class Main {
-//	
-//	private static void check(String repositoryUrl) throws IOException  {
-//		
-//		String dir;
-//		if(System.getProperty("os.name").contains("Linux"))
-//			dir  = "/home/jaziel/Dropbox/UFCG/Projeto/Dados/CSVs/"; //Linux
-//		else
-//			dir  = "C:\\Users\\Jaziel Moreira\\Dropbox\\UFCG\\Projeto\\Dados\\CSVs\\"; //Windows
-//		
-//		String aux=repositoryUrl.substring(repositoryUrl.lastIndexOf("/")+1);
-//		
-//		
-//		String refactoringsCSV=dir+"Refatoramentos/Part 1/"+aux+".csv";
-//		CSV result= new CSV(new File(dir+"Mudancas/"+aux+".csv"));
-//		Scanner in = new Scanner(new FileReader(dir+"Refatoramentos/Part 2/"+aux+".csv")).useDelimiter(";");
-//		PrintStream ps = new PrintStream(
-//			     new FileOutputStream(dir+"Mudancas/Logs/"+aux+" - log.txt", true));
-//		
-//		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
-//		
-//		
-//		
-//		in.nextLine();
-//		while(in.hasNext()) {
-//			String commit=in.next();
-//			if(in.nextLine().equals(";0")) {
-//				try {
-//					changes.getChanges(commit);
-//				} catch (Exception e) {
-//					System.out.println("Get Changes: Error");
-//					ps.println("Commit error: "+commit);
-//					e.printStackTrace(ps);
-//					ps.flush();
-//				}
-//			}
-//		}
-//		in.close();
-//		ps.close();
-//	}
-//
-//	
+	
+	private static void check(String repositoryUrl) throws IOException  {
+		
+		String dir;
+		if(System.getProperty("os.name").contains("Linux"))
+			dir  = "/home/jaziel/Dropbox/UFCG/Projeto/Dados/CSVs/"; //Linux
+		else
+			dir  = "C:\\Users\\Jaziel Moreira\\Dropbox\\UFCG\\Projeto\\Dados\\CSVs\\"; //Windows
+		
+		String aux=repositoryUrl.substring(repositoryUrl.lastIndexOf("/")+1);
+		
+		
+		String refactoringsCSV=dir+"Refatoramentos/Part 1/"+aux+".csv";
+		CSV result= new CSV(new File(dir+"Mudancas/"+aux+".csv"));
+		Scanner in = new Scanner(new FileReader(dir+"Refatoramentos/Part 2/"+aux+".csv")).useDelimiter(";");
+		PrintStream ps = new PrintStream(
+			     new FileOutputStream(dir+"Mudancas/Logs/"+aux+" - log.txt", true));
+		
+		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
+		
+		
+		
+		in.nextLine();
+		while(in.hasNext()) {
+			String commit=in.next();
+			if(in.nextLine().equals(";0")) {
+				try {
+					changes.extractChanges(commit);
+				} catch (Exception e) {
+					System.out.println("Get Changes: Error");
+					ps.println("Commit error: "+commit);
+					e.printStackTrace(ps);
+					ps.flush();
+				}
+			}
+		}
+		in.close();
+		ps.close();
+	}
+
+	
 	public static void main(String[] args) throws IOException {
 //		
 //		check("https://github.com/square/okhttp");
@@ -82,7 +82,7 @@ public class Main {
 //		check("https://github.com/Kailashrb/scribe-java");
 //		check("https://github.com/jopt-simple/jopt-simple");
 //		check("https://github.com/notnoop/java-apns");	
-//		check("https://github.com/vkostyukov/la4j");
+		check("https://github.com/vkostyukov/la4j");
 //		
 		
 		
@@ -91,87 +91,87 @@ public class Main {
 		//}
 		
 		
-		File left = new File("Purity5.java");
-		File right = new File("Purity6.java");
-		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
-
-		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
-		try {
-		    distiller.extractClassifiedSourceCodeChanges(left, right);
-		} catch(Exception e) {
-		    System.err.println("Warning: error while change distilling. " + e.getMessage());
-		}
-		
-		ModificationHistory mh=new ModificationHistory();
-		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
-		if(changes != null) {
-		    for(SourceCodeChange change : changes) {
-		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
-		    	
-		    	System.out.println("\nbegin");
-		    	System.out.println("change.getLabel():  "+change.getLabel());
-		    	System.out.println("change.getChangeType():  "+change.getChangeType());
-		        System.out.println("change.toString():  "+change.toString());
-//		        mh.addChange(change);
-//		        System.out.println();
+//		File left = new File("Purity5.java");
+//		File right = new File("Purity6.java");
+//		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
+//
+//		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
+//		try {
+//		    distiller.extractClassifiedSourceCodeChanges(left, right);
+//		} catch(Exception e) {
+//		    System.err.println("Warning: error while change distilling. " + e.getMessage());
+//		}
+//		
+//		ModificationHistory mh=new ModificationHistory();
+//		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
+//		if(changes != null) {
+//		    for(SourceCodeChange change : changes) {
+//		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
+//		    	
+//		    	System.out.println("\nbegin");
+//		    	System.out.println("change.getLabel():  "+change.getLabel());
+//		    	System.out.println("change.getChangeType():  "+change.getChangeType());
+//		        System.out.println("change.toString():  "+change.toString());
+////		        mh.addChange(change);
+////		        System.out.println();
+////		        
+////		        if(!history.contains(change)) {
+////		        	System.out.println("change.getParentEntity(): "+change.getParentEntity());
+////		        	System.out.println("change.getRootEntity(): "+change.getRootEntity());
+////		        	history.addAll(change.getRootEntity().getSourceCodeChanges());
+////		        	
+////		        }
+////		        
+////		        System.out.println("\nDeclaration:");
+////		        if(change.getDeclarationStructure()!=null) {
+////		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
+////		        	while(e.hasMoreElements())
+////		        		System.out.println(e.nextElement());
+////		        }else {
+////		        	System.out.println("Declaration: null");
+////		        }
+////		        
+////		        System.out.println("\nBody:");
+////		        if(change.getBodyStructure()!=null) {
+////		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
+////		        	while(e.hasMoreElements()) {
+////		        		Node n=(Node)e.nextElement();
+////		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
+////		        	}
+////		        }else {
+////		        	System.out.println("body: null");
+////		        }
 //		        
-//		        if(!history.contains(change)) {
-//		        	System.out.println("change.getParentEntity(): "+change.getParentEntity());
-//		        	System.out.println("change.getRootEntity(): "+change.getRootEntity());
-//		        	history.addAll(change.getRootEntity().getSourceCodeChanges());
-//		        	
+////		        
+////		        
+//		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
+//		        
+//		        System.out.println("\nChanged entity");
+//		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
+//		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
+//		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
+//		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
+//		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
+//		        System.out.println("AssociatedEntities");
+//		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
+//		        	System.out.println(sc.getLabel());
 //		        }
 //		        
-//		        System.out.println("\nDeclaration:");
-//		        if(change.getDeclarationStructure()!=null) {
-//		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
-//		        	while(e.hasMoreElements())
-//		        		System.out.println(e.nextElement());
-//		        }else {
-//		        	System.out.println("Declaration: null");
-//		        }
-//		        
-//		        System.out.println("\nBody:");
-//		        if(change.getBodyStructure()!=null) {
-//		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-//		        	while(e.hasMoreElements()) {
-//		        		Node n=(Node)e.nextElement();
-//		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
-//		        	}
-//		        }else {
-//		        	System.out.println("body: null");
-//		        }
-		        
+//		        System.out.println("\nChange type");
+//		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
+//		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
+//		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
+//		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
+////		        
+////		        
+////		        Enumeration<Node> body = change.getBodyStructure().preorderEnumeration();
+////				while(body.hasMoreElements()) {
+////					Node n=body.nextElement();
+////					System.out.println(n.toString()+"  "+n.isMatched());
+////				}
 //		        
 //		        
-		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
-		        
-		        System.out.println("\nChanged entity");
-		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
-		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
-		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
-		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
-		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
-		        System.out.println("AssociatedEntities");
-		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
-		        	System.out.println(sc.getLabel());
-		        }
-		        
-		        System.out.println("\nChange type");
-		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
-		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
-		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
-		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
-//		        
-//		        
-//		        Enumeration<Node> body = change.getBodyStructure().preorderEnumeration();
-//				while(body.hasMoreElements()) {
-//					Node n=body.nextElement();
-//					System.out.println(n.toString()+"  "+n.isMatched());
-//				}
-		        
-		        
-		    }
+//		    }
 //		    SourceCodeChange scc1 = changes.get(0);
 //		    SourceCodeChange scc2 = changes.get(1);
 //		    
@@ -199,7 +199,7 @@ public class Main {
 //			        System.out.println("change.toString():  "+change.toString());
 //			    }
 //		    }
-		}
+//		}
 
 	}
 
