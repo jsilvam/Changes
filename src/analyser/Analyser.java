@@ -1,4 +1,4 @@
-package main;
+package analyser;
 
 import java.util.Enumeration;
 import java.util.LinkedList;
@@ -25,7 +25,8 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.Update;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.NGramsCalculator;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.matching.measure.StringSimilarityCalculator;
-import utils.CallerAnalyser;
+import main.ModificationHistory;
+import main.Refactorings;
 
 public class Analyser {
 	
@@ -53,7 +54,7 @@ public class Analyser {
 	
 	public void analyse() {
 		callerAnalyser.extractShortNames(refactorings);
-		callerAnalyser.markCallers(modificationHistory);
+//		callerAnalyser.markCallers(modificationHistory); 
 		
 		for(SourceCodeChange scc: modificationHistory.getChangeHistory().keySet()) {
 			if(!modificationHistory.isChecked(scc)) {
@@ -104,10 +105,11 @@ public class Analyser {
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
-		if(method==null)//fix latter
+		if(method==null)//new method not found, new class or signature incompability. Fix latter
 			return;
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
+		List<MatchedPair> matches= new LinkedList<MatchedPair>();
 		
 		
 		try {
@@ -122,6 +124,7 @@ public class Analyser {
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
+						matches.add(new MatchedPair(node,scc));
 						break;
 					}
 				}
@@ -134,23 +137,23 @@ public class Analyser {
 				if(!node.isMatched()) {
 					for(SourceCodeChange scc: changes) {
 						if(!this.modificationHistory.isChecked(scc)
-								&& isSameEntityType(node.getEntity(),scc.getChangedEntity())
 								&& similarity(node,scc) >= this.lTh) {
+							matches.add(new MatchedPair(node,scc));
 							if(!isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
-								Node parent=(Node) node.getParent();
-								SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
-										new Move(method.getStructureEntityVersion(),
-										scc.getChangedEntity(),
-										node.getEntity(),
-										scc.getParentEntity(),
-										((Node)node.getParent()).getEntity()));
+							Node parent=(Node) node.getParent();
+							SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+									new Move(method.getStructureEntityVersion(),
+									scc.getChangedEntity(),
+									node.getEntity(),
+									scc.getParentEntity(),
+									((Node)node.getParent()).getEntity()));
 								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
 									addChange(scc1);
 									modificationHistory.setCheckedChange(scc);
 									changes.remove(scc);
 									node.enableMatched();
 								}
-							}
+							}	
 							if(!isSameEntity(node, scc)) {
 								Node parent=(Node) node.getParent();
 								SourceCodeChange scc1 = classifier.classify(
@@ -212,6 +215,7 @@ public class Analyser {
 		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
+		List<MatchedPair> matches = new LinkedList<MatchedPair>();
 		
 
 		try {
@@ -223,6 +227,7 @@ public class Analyser {
 					if(isSameEntity(node,scc)
 							//Verify only parent's type or full data?
 							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
+						matches.add(new MatchedPair(node,scc));
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
 						node.enableMatched();
@@ -238,23 +243,8 @@ public class Analyser {
 				if(!node.isMatched()) {
 					for(SourceCodeChange scc: changes) {
 						if(!this.modificationHistory.isChecked(scc)
-								&& isSameEntityType(node.getEntity(),scc.getChangedEntity())
 								&& similarity(node,scc) >= this.lTh) {
-							if(!isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
-								Node parent=(Node) node.getParent();
-								SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
-										new Move(method.getStructureEntityVersion(),
-										scc.getChangedEntity(),
-										node.getEntity(),
-										scc.getParentEntity(),
-										((Node)node.getParent()).getEntity()));
-								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									addChange(scc1);
-									modificationHistory.setCheckedChange(scc);
-									changes.remove(scc);
-									node.enableMatched();
-								}
-							}
+							matches.add(new MatchedPair(node,scc));
 							if(!isSameEntity(node, scc)) {
 								Node parent=(Node) node.getParent();
 								SourceCodeChange scc1 = classifier.classify(
@@ -277,6 +267,9 @@ public class Analyser {
 					
 				}
 			}
+			
+			
+			
 			
 			body = method.getBodyStructure().preorderEnumeration();
 			body.nextElement();
@@ -368,7 +361,11 @@ public class Analyser {
 	private double similarity(Node node, SourceCodeChange scc) {
 		SourceCodeEntity sce1= node.getEntity();
 		SourceCodeEntity sce2= scc.getChangedEntity();
-		return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName());
+		if(!isSameEntityType(sce1,sce2))
+			return 0;
+		else
+			return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName());
+		
 	}
 	
 	private boolean isSameEntityType(SourceCodeEntity entity1, SourceCodeEntity entity2) {

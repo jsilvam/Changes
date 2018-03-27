@@ -117,22 +117,12 @@ public class Purity {
 	}
 
 	
-	private void deleteDirectory(File dir){
-		File[] contents=dir.listFiles();
-		for(File f: contents){
-			if(f.isDirectory())
-				deleteDirectory(f);
-			else
-				f.delete();
-		}
-		dir.delete();
-	}
+	
 	
 	
 
 	private class Teste{
 		String m;
-		private int contador;
 		
 		private int getM() {
 			return m;

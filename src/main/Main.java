@@ -23,6 +23,8 @@ import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
 import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.SourceCodeChangeClassifier;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
 import ch.uzh.ifi.seal.changedistiller.structuredifferencing.StructureNode;
@@ -73,6 +75,18 @@ public class Main {
 		in.close();
 		ps.close();
 	}
+	
+	private static int distance(Node node, Node parent) {
+		Enumeration path= node.pathFromAncestorEnumeration(parent);
+		int cont = 0;
+		while(path.hasMoreElements()) {
+			path.nextElement();
+			cont++;
+		}
+			
+		return cont;
+	}
+	
 
 	
 	public static void main(String[] args) throws IOException {
@@ -82,7 +96,7 @@ public class Main {
 //		check("https://github.com/Kailashrb/scribe-java");
 //		check("https://github.com/jopt-simple/jopt-simple");
 //		check("https://github.com/notnoop/java-apns");	
-		check("https://github.com/vkostyukov/la4j");
+//		check("https://github.com/vkostyukov/la4j");
 //		
 		
 		
@@ -91,56 +105,51 @@ public class Main {
 		//}
 		
 		
-//		File left = new File("Purity5.java");
-//		File right = new File("Purity6.java");
-//		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
-//
-//		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
-//		try {
-//		    distiller.extractClassifiedSourceCodeChanges(left, right);
-//		} catch(Exception e) {
-//		    System.err.println("Warning: error while change distilling. " + e.getMessage());
-//		}
-//		
-//		ModificationHistory mh=new ModificationHistory();
-//		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
-//		if(changes != null) {
-//		    for(SourceCodeChange change : changes) {
-//		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
-//		    	
-//		    	System.out.println("\nbegin");
-//		    	System.out.println("change.getLabel():  "+change.getLabel());
-//		    	System.out.println("change.getChangeType():  "+change.getChangeType());
-//		        System.out.println("change.toString():  "+change.toString());
-////		        mh.addChange(change);
-////		        System.out.println();
-////		        
-////		        if(!history.contains(change)) {
-////		        	System.out.println("change.getParentEntity(): "+change.getParentEntity());
-////		        	System.out.println("change.getRootEntity(): "+change.getRootEntity());
-////		        	history.addAll(change.getRootEntity().getSourceCodeChanges());
-////		        	
-////		        }
-////		        
-////		        System.out.println("\nDeclaration:");
-////		        if(change.getDeclarationStructure()!=null) {
-////		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
-////		        	while(e.hasMoreElements())
-////		        		System.out.println(e.nextElement());
-////		        }else {
-////		        	System.out.println("Declaration: null");
-////		        }
-////		        
-////		        System.out.println("\nBody:");
-////		        if(change.getBodyStructure()!=null) {
-////		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-////		        	while(e.hasMoreElements()) {
-////		        		Node n=(Node)e.nextElement();
-////		        		System.out.println(n.getLabel()+ "  "+ n.getValue());
-////		        	}
-////		        }else {
-////		        	System.out.println("body: null");
-////		        }
+		File left = new File("Purity5.java");
+		File right = new File("Purity6.java");
+		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
+
+		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
+		try {
+		    distiller.extractClassifiedSourceCodeChanges(left, right);
+		} catch(Exception e) {
+		    System.err.println("Warning: error while change distilling. " + e.getMessage());
+		}
+		
+		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
+		if(changes != null) {
+		    for(SourceCodeChange change : changes) {
+		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
+		    	
+		    	System.out.println("\nbegin");
+		    	System.out.println("change.getLabel():  "+change.getLabel());
+		    	System.out.println("change.getChangeType():  "+change.getChangeType());
+		        System.out.println("change.toString():  "+change.toString());
+		        System.out.println();
+		        
+		        
+		        System.out.println("\nDeclaration:");
+		        if(change.getDeclarationStructure()!=null) {
+		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
+		        	while(e.hasMoreElements())
+		        		System.out.println(e.nextElement());
+		        }else {
+		        	System.out.println("Declaration: null");
+		        }
+		        
+		        System.out.println("\nBody:");
+		        if(change.getBodyStructure()!=null) {
+		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
+		        	Node root=(Node)e.nextElement();
+		        	while(e.hasMoreElements()) {
+		        		Node n=(Node)e.nextElement();
+		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
+		        	}
+		        }else {
+		        	System.out.println("body: null");
+		        }
+		        
+		        
 //		        
 ////		        
 ////		        
@@ -198,8 +207,8 @@ public class Main {
 //			    	System.out.println("change.getLabel():  "+change.getLabel());
 //			        System.out.println("change.toString():  "+change.toString());
 //			    }
-//		    }
-//		}
+		    }
+		}
 
 	}
 
