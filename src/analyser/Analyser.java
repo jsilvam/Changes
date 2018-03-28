@@ -82,7 +82,7 @@ public class Analyser {
 					String clazz = scc.getChangedEntity().getUniqueName();
 					if(!refactorings.isRefactoredClass(clazz))
 						addChange(scc);
-				}else
+				}else if(!callerAnalyser.isCaller(scc))
 					addChange(scc);
 			}	
 		}
@@ -139,21 +139,9 @@ public class Analyser {
 						if(!this.modificationHistory.isChecked(scc)
 								&& similarity(node,scc) >= this.lTh) {
 							matches.add(new MatchedPair(node,scc));
-							if(!isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
-							Node parent=(Node) node.getParent();
-							SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
-									new Move(method.getStructureEntityVersion(),
-									scc.getChangedEntity(),
-									node.getEntity(),
-									scc.getParentEntity(),
-									((Node)node.getParent()).getEntity()));
-								if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-									addChange(scc1);
-									modificationHistory.setCheckedChange(scc);
-									changes.remove(scc);
-									node.enableMatched();
-								}
-							}	
+							modificationHistory.setCheckedChange(scc);
+							changes.remove(scc);
+							node.enableMatched();
 							if(!isSameEntity(node, scc)) {
 								Node parent=(Node) node.getParent();
 								SourceCodeChange scc1 = classifier.classify(
@@ -161,20 +149,35 @@ public class Analyser {
 												node.getEntity(),
 												scc.getChangedEntity(),
 												parent.getEntity()));
-								if ((scc1 != null) 
+								if ((scc1 != null 
 										&& !verifiedSourceCodeChanges.contains(scc1)
-										&& !this.callerAnalyser.isCaller(scc1)) {
+										&& !this.callerAnalyser.isCaller(scc1))) {
 									addChange(scc1);
-									modificationHistory.setCheckedChange(scc);
-									changes.remove(scc);
-									node.enableMatched();
+									
 								}
 							}
+							
 							break;
 						}
 					}
-					
 				}
+			}
+			
+			ParentAnalyser pa = new ParentAnalyser(matches,'l');
+			
+			for(MatchedPair match: matches) {
+				if(pa.isParentChange(match)) {
+					SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+							new Move(method.getStructureEntityVersion(),
+									match.getSourceCodeChangeEntity(),
+									match.getNodeEntity(),
+									match.getSourceCodeChangeParent(),
+									match.getNodeParent()));
+					if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+						addChange(scc1);
+					}
+				}
+			
 			}
 			
 			body = method.getBodyStructure().preorderEnumeration();
@@ -245,6 +248,9 @@ public class Analyser {
 						if(!this.modificationHistory.isChecked(scc)
 								&& similarity(node,scc) >= this.lTh) {
 							matches.add(new MatchedPair(node,scc));
+							modificationHistory.setCheckedChange(scc);
+							changes.remove(scc);
+							node.enableMatched();
 							if(!isSameEntity(node, scc)) {
 								Node parent=(Node) node.getParent();
 								SourceCodeChange scc1 = classifier.classify(
@@ -256,9 +262,7 @@ public class Analyser {
 										&& !verifiedSourceCodeChanges.contains(scc1)
 										&& !this.callerAnalyser.isCaller(scc1)) {
 									addChange(scc1);
-									modificationHistory.setCheckedChange(scc);
-									changes.remove(scc);
-									node.enableMatched();
+									
 								}
 							}
 							break;
@@ -267,7 +271,6 @@ public class Analyser {
 					
 				}
 			}
-			
 			
 			
 			
