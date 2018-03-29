@@ -12,9 +12,13 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import analyser.StringAnalyser;
+import analyser.callerAnalyser.CallerAnalyser;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
 import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
@@ -148,7 +152,7 @@ public class Main {
 //		        }else {
 //		        	System.out.println("body: null");
 //		        }
-		        
+//		        
 		        
 //		        
 ////		        
@@ -209,7 +213,50 @@ public class Main {
 //			    }
 		    }
 		}
+		CallerAnalyser ca = new CallerAnalyser(); 
+		
+		String str = "EqualsBuilder(teste).append( 		\n\n	).append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n" + 
+				"                .append  (\ne1.getModifiers(),\n e2.getModifiers()).isEquals(,,)";
+		String str2 = "analyser.callerAnalyser.CallerAnalyser.teste";
+		System.out.println(str+"\n\n");
+		str = str2.replaceAll("\\s", "");
+		String[] aux = str.split("teste");
+		for(String aux1:aux)
+			System.out.println(aux1);
 
+
+		for(String aux1: aux) {
+			System.out.println(ca.countParemetersFromInvocation(aux1));
+		}
+		
+		
+		
+//		for(int i = 1; i< aux.length; i++) {
+//			System.out.println(ca.countParemetersFromInvocation(aux[i]));
+//		}
+		
+		
+//		String fullName = "analyser.callerAnalyser.CallerAnalyser.countParemetersFromInvocation";
+//		String str = fullName.replaceAll("\\s","");
+//		int beginIndex = str.lastIndexOf("(") + 1;
+//		int endIndex = str.indexOf(")");
+//		str = str.substring(beginIndex, endIndex);
+//		
+//		String[] split = str.split(",");
+//		
+//		System.out.println(str);
+//		for(int i = 1; i< split.length; i++) {
+//			System.out.println(split[i]);
+//		}
+//		System.out.println(split.length);
+		
+			
+//		List<String> aux = new StringAnalyser().getSubStrings(str, '(', ')',true);
+//		System.out.println(aux);
+//		String[] aux1 = "EqualsBuilder".split("E");
+//		System.out.println(aux1.length);
+//		for(String aux2:aux1)
+//			System.out.println(aux2);
 	}
 
 }

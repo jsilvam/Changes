@@ -9,6 +9,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import analyser.callerAnalyser.CallerAnalyser;
 import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
 import ch.uzh.ifi.seal.changedistiller.ast.java.JavaSourceCodeChangeClassifier;
 import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
@@ -33,7 +34,7 @@ public class Analyser {
 	private Refactorings refactorings;
 	private ModificationHistory modificationHistory;
 	private List<SourceCodeChange> verifiedSourceCodeChanges;
-	private	StringSimilarityCalculator strSimCalc;
+	private	StringAnalyser strAnalyser;
 	private double lTh;
 	private JavaSourceCodeChangeClassifier classifier;
 	private CallerAnalyser callerAnalyser;
@@ -42,7 +43,7 @@ public class Analyser {
 		this.refactorings = refactorings;
 		this.modificationHistory = modificationHistory;
 		this.verifiedSourceCodeChanges = new LinkedList<SourceCodeChange>();
-		this.strSimCalc = new NGramsCalculator(2);
+		this.strAnalyser = new StringAnalyser();
 		this.classifier = new JavaSourceCodeChangeClassifier();
 		this.callerAnalyser = new CallerAnalyser();
 		this.lTh= 0.6;
@@ -367,7 +368,7 @@ public class Analyser {
 		if(!isSameEntityType(sce1,sce2))
 			return 0;
 		else
-			return this.strSimCalc.calculateSimilarity(sce1.getUniqueName(), sce2.getUniqueName());
+			return this.strAnalyser.similarity(sce1.getUniqueName(), sce2.getUniqueName());
 		
 	}
 	
