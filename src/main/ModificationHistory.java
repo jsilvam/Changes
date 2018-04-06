@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import analyser.StringAnalyser;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.ChangeType;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
@@ -37,22 +38,29 @@ public class ModificationHistory {
 	}
 	
 	public void addChange(SourceCodeChange sc) {
-		String field;
+		StringAnalyser sa = new StringAnalyser();
+		String signature;
 		switch(sc.getChangeType()) {
 		case ADDITIONAL_FUNCTIONALITY:
-			createdMethods.put(sc.getChangedEntity().getUniqueName(), sc);
+			signature = sc.getChangedEntity().getUniqueName();
+			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
+			createdMethods.put(signature, sc);
 			break;
 		case REMOVED_FUNCTIONALITY:
-			deletedMethods.put(sc.getChangedEntity().getUniqueName(), sc);
+			signature = sc.getChangedEntity().getUniqueName();
+			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
+			deletedMethods.put(signature, sc);
 			break;
 		case ADDITIONAL_OBJECT_STATE:
-			field=sc.getChangedEntity().getUniqueName();
-			field=field.substring(0, field.indexOf(" : "));
-			createdFields.put(field, sc);
+			signature = sc.getChangedEntity().getUniqueName();
+			signature=signature.substring(0, signature.indexOf(" : "));
+			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
+			createdFields.put(signature, sc);
 			break;
 		case REMOVED_OBJECT_STATE:
-			field=sc.getChangedEntity().getUniqueName();
-			field=field.substring(0, field.indexOf(" : "));
+			signature=sc.getChangedEntity().getUniqueName();
+			signature=signature.substring(0, signature.indexOf(" : "));
+			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
 			deletedFields.put(sc.getChangedEntity().getUniqueName(), sc);
 			break;
 		default:
@@ -108,12 +116,16 @@ public class ModificationHistory {
 	public void addCreatedClass(String signature) {
 		SourceCodeEntity sce = new SourceCodeEntity(signature,JavaEntityType.CLASS,null);
 		Insert ins = new Insert(ChangeType.ADDITIONAL_CLASS,null,sce,null);
+		StringAnalyser sa = new StringAnalyser();
+		signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
 		this.createdClasses.put(signature, ins);
 	}
 	
 	public void addDeletedClass(String signature) {
 		SourceCodeEntity sce = new SourceCodeEntity(signature,JavaEntityType.CLASS,null);
 		Delete del = new Delete(ChangeType.REMOVED_CLASS,null,sce,null);
+		StringAnalyser sa = new StringAnalyser();
+		signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
 		this.deletedClasses.put(signature, del);
 	}
 

@@ -114,8 +114,9 @@ public class Purity{
 	}
 
 	private void deleteDirectory(File dir){
+		int aux;
 		File[] contents=dir.listFiles();
-		for(File f: contents){
+		for(int f = 0; f<contents.length; f++){
 			if(f.isDirectory())
 				deleteDirectory(f);
 			else

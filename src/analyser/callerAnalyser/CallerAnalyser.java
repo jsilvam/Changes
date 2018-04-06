@@ -1,13 +1,17 @@
 package analyser.callerAnalyser;
 
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.Set;
 
 import analyser.StringAnalyser;
 import analyser.callerAnalyser.CallerPattern.CallerType;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
+import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 import main.ModificationHistory;
 import main.Refactorings;
 
@@ -81,21 +85,71 @@ public class CallerAnalyser {
 	}
 	
 	public boolean fitPattern(SourceCodeChange caller, CallerPattern callee) {
+		return fitMethodPattern(caller,callee) || fitFieldPattern(caller,callee);
+	}
+	
+	private boolean fitMethodPattern(SourceCodeChange caller, CallerPattern callee) {
 		if(!caller.getChangedEntity().getType().isStatement())
 			return false;
-			
+		if(callee.getType() != CallerType.Method)
+			return false;
 		String statment = caller.getChangedEntity().getUniqueName();
-		if(callee.getType() == CallerType.Field 
-				&& statment.contains(callee.getShortName()))
-			return true;
 		
-		String[] split = statment.replaceAll("\\s","").split(callee.getShortName());
+		String[] split = statment.split(callee.getShortName());
 		for(int i = 1; i< split.length; i++) {
-			if(split[i].startsWith("(")
+			if(split[i].matches("\\s*(.*")
+					&& (split[i-1].isEmpty() || split[i-1].matches(".*\\W"))
 					&& countParemetersFromInvocation(split[i])==callee.getnParameters())
 				return true;
 		}
 		return false;
+	}
+	
+	private boolean fitFieldPattern(SourceCodeChange caller, CallerPattern callee) {
+		if(!caller.getChangedEntity().getType().isStatement())
+			return false;
+		if(callee.getType() != CallerType.Field)
+			return false;
+		
+		String statment = caller.getChangedEntity().getUniqueName();
+		String regex = ".*\\.\\s"+callee.getShortName()+"\\W.*";
+		if(statment.matches(regex))
+			return true;
+		
+		Node root = caller instanceof Insert? 
+				caller.getRootEntity().getBodyRigth() : caller.getRootEntity().getBodyLeft(); 
+		if(bodyContaisVariable(root,callee.getShortName()))
+			return false;
+		
+		return statment.matches(callee.getShortName()+"\\W.*")
+				|| statment.matches(".*\\W"+callee.getShortName()+"\\W.*");
+	}
+	
+	private boolean bodyContaisVariable(Node root, String name) {
+		Enumeration body = root.preorderEnumeration();
+		while(body.hasMoreElements()) {
+			SourceCodeEntity e = ((Node) body.nextElement()).getEntity();	
+			if(e.getType()==JavaEntityType.VARIABLE_DECLARATION_STATEMENT
+					&& isVariablesDeclaration(e.getUniqueName(),name))
+				return true;
+			else if(e.getType()==JavaEntityType.FOREACH_STATEMENT
+					&& isVariablesDeclaration(e.getUniqueName(),name))
+				return true;
+		}
+		return false;
+	}
+	
+	private boolean isVariablesDeclaration(String statment, String name) {
+		if(!statment.contains(name))
+			return false;
+		
+		String declaration = statment;
+		if(statment.contains("=")) {
+			int index = statment.indexOf("=");
+			declaration = statment.substring(0, index) + ";";
+		}
+		
+		return declaration.matches(".*(\\s|\\W)+"+name+"(\\s|\\W).*");
 	}
 	
 	public int countParemetersFromInvocation(String str) {

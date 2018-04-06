@@ -128,10 +128,10 @@ public class Main {
 		    	System.out.println("\nbegin");
 		    	System.out.println("change.getLabel():  "+change.getLabel());
 		    	System.out.println("change.getChangeType():  "+change.getChangeType());
-		        System.out.println("change.toString():  "+change.toString());
-		        System.out.println();
-		        
-		        
+//		        System.out.println("change.toString():  "+change.toString());
+//		        System.out.println();
+//		        
+//		        
 //		        System.out.println("\nDeclaration:");
 //		        if(change.getDeclarationStructure()!=null) {
 //		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
@@ -141,17 +141,17 @@ public class Main {
 //		        	System.out.println("Declaration: null");
 //		        }
 //		        
-//		        System.out.println("\nBody:");
-//		        if(change.getBodyStructure()!=null) {
-//		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-//		        	Node root=(Node)e.nextElement();
-//		        	while(e.hasMoreElements()) {
-//		        		Node n=(Node)e.nextElement();
-//		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
-//		        	}
-//		        }else {
-//		        	System.out.println("body: null");
-//		        }
+		        System.out.println("\nBody:");
+		        if(change.getBodyStructure()!=null) {
+		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
+		        	Node root=(Node)e.nextElement();
+		        	while(e.hasMoreElements()) {
+		        		Node n=(Node)e.nextElement();
+		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
+		        	}
+		        }else {
+		        	System.out.println("body: null");
+		        }
 //		        
 		        
 //		        
@@ -213,22 +213,29 @@ public class Main {
 //			    }
 		    }
 		}
-		CallerAnalyser ca = new CallerAnalyser(); 
+		 
+//		
+		String str = "EqualsBuilder(teste).append().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n"; 
+//				"                .append  (e1.getModifiers(), e2.getModifiers()).isEquals(,,)";
+//		String str2 = "analyser.callerAnalyser.CallerAnalyser.teste";
+//		System.out.println(str+"\n\n");
+//		str = str2.replaceAll("\\s", "");
+		String[] aux = str.split("E");
+		System.out.println();
+		for(int i = 0; i< aux.length; i++)
+			System.out.println(i+": "+aux[i]);
+//
+//
+//		for(String aux1: aux) {
+//			System.out.println(ca.countParemetersFromInvocation(aux1));
+//		}
 		
-		String str = "EqualsBuilder(teste).append( 		\n\n	).append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n" + 
-				"                .append  (\ne1.getModifiers(),\n e2.getModifiers()).isEquals(,,)";
-		String str2 = "analyser.callerAnalyser.CallerAnalyser.teste";
-		System.out.println(str+"\n\n");
-		str = str2.replaceAll("\\s", "");
-		String[] aux = str.split("teste");
-		for(String aux1:aux)
-			System.out.println(aux1);
-
-
-		for(String aux1: aux) {
-			System.out.println(ca.countParemetersFromInvocation(aux1));
-		}
-		
+//		String regex = ".*(\\s|\\W)+"+"getUnique"+"(\\s|\\W)+.*";
+//		String str = "String teste,getUnique;";
+//		System.out.println("String dfdf,getUnique;".matches(regex));
+//		
+//		
+//		System.out.println(str.matches(regex));
 		
 		
 //		for(int i = 1; i< aux.length; i++) {
@@ -251,7 +258,7 @@ public class Main {
 //		System.out.println(split.length);
 		
 			
-//		List<String> aux = new StringAnalyser().getSubStrings(str, '(', ')',true);
+//		String aux = new StringAnalyser().removeSubString(str, '(', ')',true);
 //		System.out.println(aux);
 //		String[] aux1 = "EqualsBuilder".split("E");
 //		System.out.println(aux1.length);
