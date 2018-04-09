@@ -141,17 +141,17 @@ public class Main {
 //		        	System.out.println("Declaration: null");
 //		        }
 //		        
-		        System.out.println("\nBody:");
-		        if(change.getBodyStructure()!=null) {
-		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-		        	Node root=(Node)e.nextElement();
-		        	while(e.hasMoreElements()) {
-		        		Node n=(Node)e.nextElement();
-		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
-		        	}
-		        }else {
-		        	System.out.println("body: null");
-		        }
+//		        System.out.println("\nBody:");
+//		        if(change.getBodyStructure()!=null) {
+//		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
+//		        	Node root=(Node)e.nextElement();
+//		        	while(e.hasMoreElements()) {
+//		        		Node n=(Node)e.nextElement();
+//		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
+//		        	}
+//		        }else {
+//		        	System.out.println("body: null");
+//		        }
 //		        
 		        
 //		        

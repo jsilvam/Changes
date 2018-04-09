@@ -106,8 +106,11 @@ public class Analyser {
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
-		if(method==null)//new method not found, new class or signature incompability. Fix latter
-			return;
+		if(method==null) {//new method not found, new class.
+			method = modificationHistory.getDisposableCreatedMethod(createdMethod);
+			if(method==null) //new method not found, signature incompability
+				return;
+		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		List<MatchedPair> matches= new LinkedList<MatchedPair>();
@@ -217,6 +220,11 @@ public class Analyser {
 	private void analiseInlinedMethod(StructureEntityVersion root) {
 		String deletedMethod = this.refactorings.getInlinedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
+		if(method==null) {//new method not found, new class.
+			method = modificationHistory.getDisposableDeletedMethod(deletedMethod);
+			if(method==null) //new method not found, signature incompability
+				return;
+		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		List<MatchedPair> matches = new LinkedList<MatchedPair>();

@@ -58,14 +58,14 @@ public class Changes {
 				targetFiles.remove(clazz);
 			}else {
 				System.out.println("File Removed: "+clazz);
-				modificationHistory.addDeletedClass(clazz);
+				modificationHistory.addDeletedClass(clazz,sourceFiles.get(clazz));
 			}
 		}
 		
 		
 		for(String signature: targetFiles.keySet()) {
 			System.out.println("Created File: "+signature);
-			modificationHistory.addDeletedClass(signature);
+			modificationHistory.addCreatedClass(signature,targetFiles.get(signature));
 		}
 		
 		//Analyse changes
