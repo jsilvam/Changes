@@ -129,7 +129,8 @@ public class Purity{
 		String m;
 		
 		private int getM() {
-			return m;
+			
+			
 		}
 		
 		private void setM(String m1, int g, String gh) {

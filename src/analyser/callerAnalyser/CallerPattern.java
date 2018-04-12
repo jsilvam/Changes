@@ -1,10 +1,13 @@
 package analyser.callerAnalyser;
 
+import java.util.List;
+
 public class CallerPattern {
 	
 	private String shortName;
 	private int nParameters;
 	private CallerType type;
+	public List<Integer> test;
 	
 	
 	public enum CallerType{
@@ -69,11 +72,13 @@ public class CallerPattern {
 	public void setFromFullName(String fullName) {
 		this.setShortNameFromFullName(fullName);
 		int lastIndex = fullName.indexOf("(");		
-		if(lastIndex<0)
+		if(lastIndex<0) {
 			this.type = CallerType.Field;
+			this.nParameters = -1;
+		}
 		else {
 			this.type = CallerType.Method;
-			this.nParameters = 0;
+			setnParametersFromFullName(fullName);
 		}
 	}
 }

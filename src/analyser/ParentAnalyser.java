@@ -20,6 +20,12 @@ public class ParentAnalyser {
 		originalRoot = identifyParent(matches,c);
 	}
 
+	public boolean isParentChange(Node node, SourceCodeChange scc){
+		SourceCodeEntity sce = ((Node) node.getParent()).getEntity();
+		return !isSameEntityType(sce, scc.getParentEntity())
+				&& !isSameEntityType(originalRoot, scc.getParentEntity());
+	}
+	
 	public boolean isParentChange(MatchedPair match){
 		return !isSameEntityType(match.getNodeParent(), match.getSourceCodeChangeParent())
 				&& !isSameEntityType(originalRoot, match.getSourceCodeChangeParent());

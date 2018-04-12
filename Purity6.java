@@ -118,14 +118,24 @@ public class Purity {
 
 	
 	
-	
+	private void deleteDirectory(File dir){
+		int aux;
+		File[] contents=dir.listFiles();
+		for(int f = 0; f<contents.length; f++){
+			if(f.isDirectory())
+				deleteDirectory(f);
+			else
+				f.delete();
+		}
+		dir.delete();
+	}
 	
 
 	private class Teste{
 		String m;
 		
-		private int getM() {
-			return m;
+		private double getM() {
+			return this.m;
 		}
 		
 		private void setM(String m1, int g, String gh) {

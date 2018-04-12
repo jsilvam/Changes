@@ -8,17 +8,20 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 import analyser.StringAnalyser;
 import analyser.callerAnalyser.CallerAnalyser;
+import analyser.callerAnalyser.CallerPattern;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
 import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
 import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
@@ -120,6 +123,8 @@ public class Main {
 		    System.err.println("Warning: error while change distilling. " + e.getMessage());
 		}
 		
+		
+		
 		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
 		if(changes != null) {
 		    for(SourceCodeChange change : changes) {
@@ -128,6 +133,7 @@ public class Main {
 		    	System.out.println("\nbegin");
 		    	System.out.println("change.getLabel():  "+change.getLabel());
 		    	System.out.println("change.getChangeType():  "+change.getChangeType());
+		    	
 //		        System.out.println("change.toString():  "+change.toString());
 //		        System.out.println();
 //		        
@@ -215,15 +221,15 @@ public class Main {
 		}
 		 
 //		
-		String str = "EqualsBuilder(teste).append().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n"; 
+//		String str = "EqualsBuilder(teste).append().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n"; 
 //				"                .append  (e1.getModifiers(), e2.getModifiers()).isEquals(,,)";
 //		String str2 = "analyser.callerAnalyser.CallerAnalyser.teste";
 //		System.out.println(str+"\n\n");
 //		str = str2.replaceAll("\\s", "");
-		String[] aux = str.split("E");
-		System.out.println();
-		for(int i = 0; i< aux.length; i++)
-			System.out.println(i+": "+aux[i]);
+//		String[] aux = str.split("E");
+//		System.out.println();
+//		for(int i = 0; i< aux.length; i++)
+//			System.out.println(i+": "+aux[i]);
 //
 //
 //		for(String aux1: aux) {
@@ -264,6 +270,12 @@ public class Main {
 //		System.out.println(aux1.length);
 //		for(String aux2:aux1)
 //			System.out.println(aux2);
+		
+		
 	}
+	
+	
+	
 
 }
+

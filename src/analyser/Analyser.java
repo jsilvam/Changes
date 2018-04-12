@@ -16,6 +16,7 @@ import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
 import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.ChangeType;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Delete;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Move;
@@ -101,8 +102,9 @@ public class Analyser {
 		}
 	}
 	
-	//verify if the entities are equal or, if it is a leaf, if it is similar
-	//Do I remove the leaf verification?
+	
+	
+	
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
@@ -114,6 +116,7 @@ public class Analyser {
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		List<MatchedPair> matches= new LinkedList<MatchedPair>();
+		List<Node> returnStatements = new LinkedList<Node>();
 		
 		
 		try {
@@ -121,17 +124,21 @@ public class Analyser {
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				node.disableMatched();
-				for(SourceCodeChange scc: changes) {
-					if(isSameEntity(node,scc)
-							//Verify only parent's type or full data?
-							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
-						modificationHistory.setCheckedChange(scc);
-						changes.remove(scc);
-						node.enableMatched();
-						matches.add(new MatchedPair(node,scc));
-						break;
+				if(node.getEntity().getType() == JavaEntityType.RETURN_STATEMENT) {
+					node.enableMatched();
+					if(node.getEntity().getUniqueName().replaceAll("\\.", "").matches(".*\\W.*"))
+						returnStatements.add(node);
+				}else
+					for(SourceCodeChange scc: changes) {
+						if(isSameEntity(node,scc)
+								&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {
+							matches.add(new MatchedPair(node,scc));
+							modificationHistory.setCheckedChange(scc);
+							changes.remove(scc);
+							node.enableMatched();
+							break;
+						}
 					}
-				}
 			}
 		
 			body = method.getBodyStructure().preorderEnumeration();
@@ -140,8 +147,7 @@ public class Analyser {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
 					for(SourceCodeChange scc: changes) {
-						if(!this.modificationHistory.isChecked(scc)
-								&& similarity(node,scc) >= this.lTh) {
+						if(similarity(node,scc) >= this.lTh) {
 							matches.add(new MatchedPair(node,scc));
 							modificationHistory.setCheckedChange(scc);
 							changes.remove(scc);
@@ -150,39 +156,79 @@ public class Analyser {
 								Node parent=(Node) node.getParent();
 								SourceCodeChange scc1 = classifier.classify(
 										new Update(method.getStructureEntityVersion(),
-												node.getEntity(),
 												scc.getChangedEntity(),
+												node.getEntity(),
 												parent.getEntity()));
 								if ((scc1 != null 
 										&& !verifiedSourceCodeChanges.contains(scc1)
 										&& !this.callerAnalyser.isCaller(scc1))) {
 									addChange(scc1);
-									
 								}
 							}
-							
 							break;
 						}
 					}
 				}
 			}
 			
+			for(Node node: returnStatements) {
+				String returnExpression = node.getEntity().getUniqueName();
+				for(SourceCodeChange scc: changes) {
+					if(isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())
+							&& scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
+						modificationHistory.setCheckedChange(scc);
+						matches.add(new MatchedPair(node,scc));
+						changes.remove(scc);
+						returnStatements.remove(node);
+						break;
+					}
+				}
+			}
+			
+			for(Node node: returnStatements) {
+				String returnExpression = node.getEntity().getUniqueName();
+				for(SourceCodeChange scc: changes) {
+					if(this.strAnalyser.similarity(scc.getChangedEntity().getUniqueName(),returnExpression) >= this.lTh) {
+						matches.add(new MatchedPair(node,scc));
+						modificationHistory.setCheckedChange(scc);
+						changes.remove(scc);
+						returnStatements.remove(node);
+						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
+							Node parent=(Node) node.getParent();
+							SourceCodeChange scc1 = classifier.classify(
+									new Update(method.getStructureEntityVersion(),
+											node.getEntity(),
+											scc.getChangedEntity(),
+											parent.getEntity()));
+							((Update) scc1).setChangedEntity(scc.getChangedEntity());
+							((Update) scc1).setNewEntity(node.getEntity());
+							if ((scc1 != null 
+									&& !verifiedSourceCodeChanges.contains(scc1)
+									&& !this.callerAnalyser.isCaller(scc1)))
+								addChange(scc1);
+						}
+						break;
+					}
+				}
+			}
+			
+			
+			
 			ParentAnalyser pa = new ParentAnalyser(matches,'l');
 			
 			for(MatchedPair match: matches) {
 				if(pa.isParentChange(match)) {
-					SourceCodeChange scc1 = classifier.classify(  //new Move(ChangeType.STATEMENT_PARENT_CHANGE,
-							new Move(method.getStructureEntityVersion(),
-									match.getSourceCodeChangeEntity(),
-									match.getNodeEntity(),
-									match.getSourceCodeChangeParent(),
-									match.getNodeParent()));
+					SourceCodeChange scc1 = new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+							method.getStructureEntityVersion(),
+							match.getSourceCodeChangeEntity(),
+							match.getNodeEntity(),
+							match.getSourceCodeChangeParent(),
+							match.getNodeParent());
 					if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
 						addChange(scc1);
 					}
 				}
-			
-			}
+			}	
 			
 			body = method.getBodyStructure().preorderEnumeration();
 			body.nextElement();
@@ -197,7 +243,6 @@ public class Analyser {
 					}	
 				}
 			}
-			
 			
 			for(SourceCodeChange scc: changes) {
 				if (!verifiedSourceCodeChanges.contains(scc)
@@ -216,7 +261,7 @@ public class Analyser {
 			
 	}
 	
-	//verify if the entities are equal or, if it is a leaf, if it is similar
+	
 	private void analiseInlinedMethod(StructureEntityVersion root) {
 		String deletedMethod = this.refactorings.getInlinedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
@@ -228,24 +273,28 @@ public class Analyser {
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes=root.getSourceCodeChanges();
 		List<MatchedPair> matches = new LinkedList<MatchedPair>();
-		
+		List<Node> returnStatements = new LinkedList<Node>();
 
 		try {
 			body.nextElement();
 			while(body.hasMoreElements()) {
 				Node node=body.nextElement();
 				node.disableMatched();
-				for(SourceCodeChange scc: changes) {
-					if(isSameEntity(node,scc)
-							//Verify only parent's type or full data?
-							&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
-						matches.add(new MatchedPair(node,scc));
-						modificationHistory.setCheckedChange(scc);
-						changes.remove(scc);
-						node.enableMatched();
-						break;
+				if(node.getEntity().getType() == JavaEntityType.RETURN_STATEMENT) {
+					node.enableMatched();
+					if(node.getEntity().getUniqueName().replaceAll("\\.", "").matches(".*\\W.*"))
+						returnStatements.add(node);
+				}else
+					for(SourceCodeChange scc: changes) {
+						if(isSameEntity(node,scc)
+								&& isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())) {	
+							matches.add(new MatchedPair(node,scc));
+							modificationHistory.setCheckedChange(scc);
+							changes.remove(scc);
+							node.enableMatched();
+							break;
+						}
 					}
-				}
 			}
 		
 			body = method.getBodyStructure().preorderEnumeration();
@@ -254,8 +303,7 @@ public class Analyser {
 				Node node=body.nextElement();
 				if(!node.isMatched()) {
 					for(SourceCodeChange scc: changes) {
-						if(!this.modificationHistory.isChecked(scc)
-								&& similarity(node,scc) >= this.lTh) {
+						if(similarity(node,scc) >= this.lTh) {
 							matches.add(new MatchedPair(node,scc));
 							modificationHistory.setCheckedChange(scc);
 							changes.remove(scc);
@@ -278,6 +326,62 @@ public class Analyser {
 						}
 					}
 					
+				}
+			}
+			
+			for(Node node: returnStatements) {
+				String returnExpression = node.getEntity().getUniqueName();
+				for(SourceCodeChange scc: changes) {
+					if(isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())
+							&& scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
+						modificationHistory.setCheckedChange(scc);
+						matches.add(new MatchedPair(node,scc));
+						changes.remove(scc);
+						returnStatements.remove(node);
+						break;
+					}
+				}
+			}
+			
+			for(Node node: returnStatements) {
+				String returnExpression = node.getEntity().getUniqueName();
+				for(SourceCodeChange scc: changes) {
+					if(this.strAnalyser.similarity(scc.getChangedEntity().getUniqueName(),returnExpression) >= this.lTh) {
+						matches.add(new MatchedPair(node,scc));
+						modificationHistory.setCheckedChange(scc);
+						changes.remove(scc);
+						returnStatements.remove(node);
+						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
+							Node parent=(Node) node.getParent();
+							SourceCodeChange scc1 = classifier.classify(
+									new Update(method.getStructureEntityVersion(),
+											node.getEntity(),
+											scc.getChangedEntity(),
+											parent.getEntity()));
+							if ((scc1 != null 
+									&& !verifiedSourceCodeChanges.contains(scc1)
+									&& !this.callerAnalyser.isCaller(scc1))) 
+								addChange(scc1);
+						}
+						break;
+					}
+				}
+			}
+			
+			ParentAnalyser pa = new ParentAnalyser(matches,'r');
+			
+			for(MatchedPair match: matches) {
+				if(pa.isParentChange(match)) {
+					SourceCodeChange scc1 = new Move(ChangeType.STATEMENT_PARENT_CHANGE,
+							method.getStructureEntityVersion(),
+							match.getNodeEntity(),
+							match.getSourceCodeChangeEntity(),
+							match.getNodeParent(),
+							match.getSourceCodeChangeParent());
+									
+					if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
+						addChange(scc1);
+					}
 				}
 			}
 			
@@ -311,9 +415,10 @@ public class Analyser {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
+	
+	
+	
 	
 	private void analiseMovedAttribute(SourceCodeChange oldField, String oldSignature) {
 		String newSignature = this.refactorings.getMovedAttributeSignature(oldSignature);
