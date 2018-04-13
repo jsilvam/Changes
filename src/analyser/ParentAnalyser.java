@@ -41,6 +41,7 @@ public class ParentAnalyser {
 			return null;
 		
 		SourceCodeChange scc = matches.get(0).getChange();
+		Node node = null;
 		Node root;
 		if(c=='l' || c=='L')
 			root = scc.getRootEntity().getBodyLeft();
@@ -49,27 +50,34 @@ public class ParentAnalyser {
 		else 
 			throw new IllegalArgumentException("Inform only 'r' or 'l'!");
 		
-		Node node = findNode(scc,root);
-		int depth = depth(node,root);
+		int depth = Integer.MAX_VALUE;
 		for(MatchedPair match: matches) {
 			scc=match.getChange();
 			Node n = findNode(scc,root);
 			int depthAux = depth(n,root);
-			if(depthAux < depth)
+			if(depthAux != -1 && depthAux < depth) {
 				node = n;
+				depth = depthAux;
+			}
 		}
-		node = (Node) node.getParent();
-		return node.getEntity();
+		if(node != null) {
+			node = (Node) node.getParent();
+			return node.getEntity();
+		}else
+			return null;
 	}
 	
 	private int depth(Node node, Node root) {
-		Enumeration path= node.pathFromAncestorEnumeration(root);
 		int cont = 0;
+		if(node==null) {
+			return -1;
+		}
+		Enumeration path= node.pathFromAncestorEnumeration(root);
+		cont = 0;
 		while(path.hasMoreElements()) {
 			path.nextElement();
 			cont++;
 		}
-		node.getEntity();
 		return cont;
 	}
 	

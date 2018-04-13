@@ -97,7 +97,7 @@ public class CallerAnalyser {
 		
 		String[] split = statment.split(callee.getShortName());
 		for(int i = 1; i< split.length; i++) {
-			if(split[i].matches("\\s*(.*")
+			if(split[i].matches("\\s*\\(.*")
 					&& (split[i-1].isEmpty() || split[i-1].matches(".*\\W"))
 					&& countParemetersFromInvocation(split[i])==callee.getnParameters())
 				return true;

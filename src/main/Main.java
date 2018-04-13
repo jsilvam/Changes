@@ -103,7 +103,7 @@ public class Main {
 //		check("https://github.com/Kailashrb/scribe-java");
 //		check("https://github.com/jopt-simple/jopt-simple");
 //		check("https://github.com/notnoop/java-apns");	
-//		check("https://github.com/vkostyukov/la4j");
+		check("https://github.com/vkostyukov/la4j");
 //		
 		
 		
@@ -112,28 +112,28 @@ public class Main {
 		//}
 		
 		
-		File left = new File("Purity5.java");
-		File right = new File("Purity6.java");
-		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
-
-		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
-		try {
-		    distiller.extractClassifiedSourceCodeChanges(left, right);
-		} catch(Exception e) {
-		    System.err.println("Warning: error while change distilling. " + e.getMessage());
-		}
-		
-		
-		
-		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
-		if(changes != null) {
-		    for(SourceCodeChange change : changes) {
-		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
-		    	
-		    	System.out.println("\nbegin");
-		    	System.out.println("change.getLabel():  "+change.getLabel());
-		    	System.out.println("change.getChangeType():  "+change.getChangeType());
-		    	
+//		File left = new File("Purity5.java");
+//		File right = new File("Purity6.java");
+//		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
+//
+//		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
+//		try {
+//		    distiller.extractClassifiedSourceCodeChanges(left, right);
+//		} catch(Exception e) {
+//		    System.err.println("Warning: error while change distilling. " + e.getMessage());
+//		}
+//		
+//		
+//		
+//		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
+//		if(changes != null) {
+//		    for(SourceCodeChange change : changes) {
+//		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
+//		    	
+//		    	System.out.println("\nbegin");
+//		    	System.out.println("change.getLabel():  "+change.getLabel());
+//		    	System.out.println("change.getChangeType():  "+change.getChangeType());
+//		    	
 //		        System.out.println("change.toString():  "+change.toString());
 //		        System.out.println();
 //		        
@@ -217,8 +217,8 @@ public class Main {
 //			    	System.out.println("change.getLabel():  "+change.getLabel());
 //			        System.out.println("change.toString():  "+change.toString());
 //			    }
-		    }
-		}
+//		    }
+//		}
 		 
 //		
 //		String str = "EqualsBuilder(teste).append().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n"; 
