@@ -16,8 +16,8 @@ public class CSV {
 	public CSV(File file) throws IOException {
 		writer = new FileWriter(file);
 		writer.write("Commit;Change;"
-				//+ "ChangedEntity;"
-				+ "LocationBefore;LocationAfter");
+				+ "ChangedEntity;"
+				+ "rootEntity");
 		writer.flush();
 	}
 	

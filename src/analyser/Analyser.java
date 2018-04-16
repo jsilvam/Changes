@@ -126,7 +126,7 @@ public class Analyser {
 				node.disableMatched();
 				if(node.getEntity().getType() == JavaEntityType.RETURN_STATEMENT) {
 					node.enableMatched();
-					if(node.getEntity().getUniqueName().replaceAll("\\.", "").matches(".*\\W.*"))
+					if(node.getEntity().getUniqueName().replaceAll("\\.", "").replaceAll(";", "").matches(".*\\W.*"))
 						returnStatements.add(node);
 				}else
 					for(SourceCodeChange scc: changes) {
