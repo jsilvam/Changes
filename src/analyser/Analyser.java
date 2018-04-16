@@ -257,8 +257,6 @@ public class Analyser {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-			
 	}
 	
 	

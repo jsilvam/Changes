@@ -126,9 +126,11 @@ public class CallerAnalyser {
 	}
 	
 	private boolean bodyContaisVariable(Node root, String name) {
-		Enumeration body = root.preorderEnumeration();
+		if(root==null)
+			return false;
+		Enumeration<Node> body = root.preorderEnumeration();
 		while(body.hasMoreElements()) {
-			SourceCodeEntity e = ((Node) body.nextElement()).getEntity();	
+			SourceCodeEntity e = body.nextElement().getEntity();	
 			if(e.getType()==JavaEntityType.VARIABLE_DECLARATION_STATEMENT
 					&& isVariablesDeclaration(e.getUniqueName(),name))
 				return true;

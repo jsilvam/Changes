@@ -73,6 +73,7 @@ public class Main {
 					changes.extractChanges(commit);
 				} catch (Exception e) {
 					System.out.println("Get Changes: Error");
+					e.printStackTrace();
 					ps.println("Commit error: "+commit);
 					e.printStackTrace(ps);
 					ps.flush();

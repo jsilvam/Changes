@@ -50,15 +50,19 @@ public class CallerPattern {
 	}
 	
 	public void setnParametersFromFullName(String fullName) {
+		fullName = fullName.replaceAll("\\s", "");
 		int beginIndex = fullName.lastIndexOf("(");
 		if(beginIndex<0) {
 			this.nParameters = 0;
 			return;
 		}
 		int endIndex = fullName.indexOf(")");
-		String str = fullName.substring(beginIndex +1, endIndex);
-		int count = str.split(",").length;
-		this.nParameters = count;
+		if(endIndex-beginIndex!=1) {
+			String str = fullName.substring(beginIndex +1, endIndex);
+			int count = str.split(",").length;
+			this.nParameters = count;
+		}else
+			this.nParameters = 0;
 	}
 	
 	public CallerType getType() {

@@ -82,9 +82,9 @@ public class ParentAnalyser {
 	}
 	
 	private Node findNode(SourceCodeChange scc, Node root) {
-		Enumeration body = root.breadthFirstEnumeration();
+		Enumeration<Node> body = root.breadthFirstEnumeration();
 		while(body.hasMoreElements()) {
-			Node element = (Node)body.nextElement();
+			Node element = body.nextElement();
 			if(isSameEntity(element,scc))
 				return element;
 		}
