@@ -11,10 +11,13 @@ import java.util.Scanner;
 public class Refactorings {
 	
 	private Map<String, String> changedClassSignatures;
-	private Map<String, String> movedAttributes;
-	private Map<String, String> movedMethods;
 	private Map<String, String> extractedMethods;
 	private Map<String, String> inlinedMethods;
+	
+	private Map<String, String> movedAttributesLeftToRight;
+	private Map<String, String> movedMethodsLeftToRight;
+	private Map<String, String> movedAttributesRightToLeft;
+	private Map<String, String> movedMethodsRightToLeft;
 	
 	private List<String> addedClasses;
 	
@@ -30,11 +33,14 @@ public class Refactorings {
 	private void init(String csvPath,String commit) throws FileNotFoundException {
 		
 		this.changedClassSignatures = new HashMap<String,String>();
-		this.movedMethods = new HashMap<String,String>();
-		this.movedAttributes = new HashMap<String,String>();
 		this.extractedMethods = new HashMap<String,String>();
 		this.inlinedMethods = new HashMap<String,String>();
 		this.renamedMethods = new HashMap<String,String>();
+		
+		this.movedMethodsLeftToRight = new HashMap<String,String>();
+		this.movedAttributesLeftToRight = new HashMap<String,String>();
+		this.movedMethodsRightToLeft = new HashMap<String,String>();
+		this.movedAttributesRightToLeft = new HashMap<String,String>();
 		
 		this.addedClasses = new ArrayList<String>();
 		
@@ -66,9 +72,10 @@ public class Refactorings {
 						value=in.next();
 						String before=key.substring(0, key.lastIndexOf("."));
 						String after=value.substring(0, value.indexOf("."));
-						if(!before.equals(after))
-							this.movedMethods.put(key, value);
-						else
+						if(!before.equals(after)) {
+							this.movedMethodsLeftToRight.put(key, value);
+							this.movedMethodsRightToLeft.put(value, key);
+						}else
 							this.renamedMethods.put(key, value);
 						break;
 					case "Pull Up Method":
@@ -76,14 +83,16 @@ public class Refactorings {
 					case "Move Method":
 						key=in.next();
 						value=in.next();
-						this.movedMethods.put(key, value);
+						this.movedMethodsLeftToRight.put(key, value);
+						this.movedMethodsRightToLeft.put(value, key);
 						break;
 					case "Pull Up Attribute":
 					case "Push Down Attribute":
 					case "Move Attribute":
 						key=in.next();
 						value=in.next();
-						this.movedAttributes.put(key, value);
+						this.movedAttributesLeftToRight.put(key, value);
+						this.movedAttributesRightToLeft.put(value, key);
 						break;
 					case "Rename Class":
 					case "Move Class":
@@ -113,11 +122,11 @@ public class Refactorings {
 	}
 	
 	public boolean isMovedMethod(String signature) {
-		return (this.movedMethods.containsKey(signature) || this.movedMethods.containsValue(signature));
+		return (this.movedMethodsLeftToRight.containsKey(signature) || this.movedMethodsRightToLeft.containsKey(signature));
 	}
 	
 	public boolean isMovedAttribute(String signature) {
-		return (this.movedAttributes.containsKey(signature) || this.movedAttributes.containsValue(signature));
+		return (this.movedAttributesLeftToRight.containsKey(signature) || this.movedAttributesRightToLeft.containsKey(signature));
 	}
 	
 	//needs better name
@@ -141,12 +150,20 @@ public class Refactorings {
 		return changedClassSignatures;
 	}
 
-	public Map<String, String> getMovedAttributes() {
-		return movedAttributes;
+	public Map<String, String> getMovedAttributesLeftToRight() {
+		return movedAttributesLeftToRight;
 	}
 
-	public Map<String, String> getMovedMethods() {
-		return movedMethods;
+	public Map<String, String> getMovedMethodsLeftToRight() {
+		return movedMethodsLeftToRight;
+	}
+	
+	public Map<String, String> getMovedAttributesRightToLeft() {
+		return movedAttributesRightToLeft;
+	}
+
+	public Map<String, String> getMovedMethodsRightToLeft() {
+		return movedMethodsRightToLeft;
 	}
 
 	public List<String> getAddedClasses() {
@@ -169,12 +186,20 @@ public class Refactorings {
 		return inlinedMethods.get(signature);
 	}
 
-	public String getMovedAttributeSignature(String signature) {
-		return movedAttributes.get(signature);
+	public String getNewMovedAttributeSignature(String oldSignature) {
+		return movedAttributesLeftToRight.get(oldSignature);
 	}
 
-	public String getMovedMethodSignature(String signature) {
-		return movedMethods.get(signature);
+	public String getNewMovedMethodSignature(String oldSignature) {
+		return movedMethodsLeftToRight.get(oldSignature);
+	}
+	
+	public String getOldMovedAttributeSignature(String newSignature) {
+		return movedAttributesRightToLeft.get(newSignature);
+	}
+
+	public String getOldMovedMethodSignature(String newSignature) {
+		return movedMethodsRightToLeft.get(newSignature);
 	}
 	
 	public String getNewClassSignature(String signature) {

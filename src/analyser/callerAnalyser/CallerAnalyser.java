@@ -30,28 +30,27 @@ public class CallerAnalyser {
 		for(String signature: signatures)
 			callerPatterns.add(new CallerPattern(signature));
 		
-		signatures = refactorings.getMovedMethods().values();
-		for(String signature: signatures)
-			callerPatterns.add(new CallerPattern(signature));
-		
 		signatures = refactorings.getRenamedMethods().values();
 		for(String signature: signatures)
 			callerPatterns.add(new CallerPattern(signature));
 		
-		signatures = refactorings.getMovedAttributes().values();
-		for(String signature: signatures)
+		Set<String> signatures2 = refactorings.getMovedMethodsLeftToRight().keySet();
+		for(String signature: signatures2)
 			callerPatterns.add(new CallerPattern(signature));
 		
+		signatures2 = refactorings.getMovedMethodsRightToLeft().keySet();
+		for(String signature: signatures2)
+			callerPatterns.add(new CallerPattern(signature));
 		
-		Set<String> signatures2 = refactorings.getMovedMethods().keySet();
+		signatures2 = refactorings.getMovedAttributesLeftToRight().keySet();
+		for(String signature: signatures2)
+			callerPatterns.add(new CallerPattern(signature));
+		
+		signatures2 = refactorings.getMovedAttributesRightToLeft().keySet();
 		for(String signature: signatures2)
 			callerPatterns.add(new CallerPattern(signature));
 		
 		signatures2 = refactorings.getRenamedMethods().keySet();
-		for(String signature: signatures2)
-			callerPatterns.add(new CallerPattern(signature));
-		
-		signatures2 = refactorings.getMovedAttributes().keySet();
 		for(String signature: signatures2)
 			callerPatterns.add(new CallerPattern(signature));
 	}

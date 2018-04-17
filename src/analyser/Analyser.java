@@ -114,7 +114,7 @@ public class Analyser {
 				return;
 		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
-		List<SourceCodeChange> changes=root.getSourceCodeChanges();
+		List<SourceCodeChange> changes= new LinkedList<SourceCodeChange>(root.getSourceCodeChanges());
 		List<MatchedPair> matches= new LinkedList<MatchedPair>();
 		List<Node> returnStatements = new LinkedList<Node>();
 		
@@ -269,7 +269,7 @@ public class Analyser {
 				return;
 		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
-		List<SourceCodeChange> changes=root.getSourceCodeChanges();
+		List<SourceCodeChange> changes = new LinkedList<SourceCodeChange>(root.getSourceCodeChanges());
 		List<MatchedPair> matches = new LinkedList<MatchedPair>();
 		List<Node> returnStatements = new LinkedList<Node>();
 
@@ -418,48 +418,78 @@ public class Analyser {
 	
 	
 	
-	private void analiseMovedAttribute(SourceCodeChange oldField, String oldSignature) {
-		String newSignature = this.refactorings.getMovedAttributeSignature(oldSignature);
-		if(newSignature == null)
-			return;
+	private void analiseMovedAttribute(SourceCodeChange field, String signature) {
+		SourceCodeChange field2;
+		List<SourceCodeChange> changes;
+		if(field instanceof Insert) {
+			signature = this.refactorings.getOldMovedAttributeSignature(signature);
+			field2 = this.modificationHistory.getDeletedField(signature);
+			if(field2==null) { //Field not found, check in deleted classes;
+				field2 = this.modificationHistory.getDisposableDeletedField(signature);
+				if(field2==null) 
+					return;
+			}
+			StructureEntityVersion rootEntity = field.getStructureEntityVersion();
+			changes = extractChanges(field2.getDeclarationStructure(), field.getDeclarationStructure(), rootEntity);
+		}else {
+			signature = this.refactorings.getNewMovedAttributeSignature(signature);
+			field2 = this.modificationHistory.getCreatedField(signature);
+			if(field2==null) {//Field not found, check in deleted classes;
+				field2 = this.modificationHistory.getDisposableCreatedField(signature);
+				if(field2==null) 
+					return;
+			}
+			StructureEntityVersion rootEntity = field2.getStructureEntityVersion();
+			changes = extractChanges(field.getDeclarationStructure(), field2.getDeclarationStructure(), rootEntity);
+		}
 		
-		SourceCodeChange newField = this.modificationHistory.getCreatedField(newSignature);
-		StructureEntityVersion rootEntity = newField.getStructureEntityVersion();
-	    List<SourceCodeChange> changes = extractChanges(oldField.getDeclarationStructure(), newField.getDeclarationStructure(), rootEntity); 
+		 
 	    this.verifiedSourceCodeChanges.addAll(changes);
 	    try {
-	    	modificationHistory.setCheckedChange(oldField);
-			modificationHistory.setCheckedChange(newField);
+	    	modificationHistory.setCheckedChange(field);
+			modificationHistory.setCheckedChange(field2);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 	
-	private void analiseMovedMethod(SourceCodeChange oldMethod, String oldSignature) {
-		String newSignature = this.refactorings.getMovedMethodSignature(oldSignature);
-		if(newSignature == null)
-			return;
+	private void analiseMovedMethod(SourceCodeChange method, String signature) {
+		SourceCodeChange method2;
+		List<SourceCodeChange> changes;
+		if(method instanceof Insert) {
+			signature = this.refactorings.getOldMovedMethodSignature(signature);
+			method2 = this.modificationHistory.getDeletedMethod(signature);
+			if(method2==null) { //Field not found, check in deleted classes;
+				method2 = this.modificationHistory.getDisposableDeletedMethod(signature);
+				if(method2==null) 
+					return;
+			}
+			StructureEntityVersion rootEntity = method.getStructureEntityVersion();
+			changes = extractChanges(method2.getDeclarationStructure(), method.getDeclarationStructure(), rootEntity);
+			changes.addAll(extractChanges(method2.getBodyStructure(), method.getBodyStructure(), rootEntity));
+		}else {
+			signature = this.refactorings.getNewMovedMethodSignature(signature);
+			method2 = this.modificationHistory.getCreatedMethod(signature);
+			if(method2==null) {//Field not found, check in deleted classes;
+				method2 = this.modificationHistory.getDisposableCreatedMethod(signature);
+				if(method2==null) 
+					return;
+			}
+			StructureEntityVersion rootEntity = method2.getStructureEntityVersion();
+			changes = extractChanges(method.getDeclarationStructure(), method2.getDeclarationStructure(), rootEntity);
+			changes.addAll(extractChanges(method.getBodyStructure(), method2.getBodyStructure(), rootEntity));
+		}
 		
-		//Analyse signature incompability
-		SourceCodeChange newMethod = this.modificationHistory.getCreatedMethod(newSignature);
-		if(newMethod == null)
-			return;
 		
-	    StructureEntityVersion rootEntity = newMethod.getStructureEntityVersion();
-	    List<SourceCodeChange> changes = extractChanges(oldMethod.getDeclarationStructure(), newMethod.getDeclarationStructure(), rootEntity);
 	    for(SourceCodeChange scc: changes) {
-	    	if(scc.getChangeType()!=ChangeType.METHOD_RENAMING)
-	    		this.verifiedSourceCodeChanges.add(scc);
-	    }
-	    changes = extractChanges(oldMethod.getBodyStructure(), newMethod.getBodyStructure(), rootEntity);
-	    for(SourceCodeChange scc: changes) {
-	    	if(!callerAnalyser.isCaller(scc))
+	    	if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
+	    			&& !callerAnalyser.isCaller(scc))
 	    		this.verifiedSourceCodeChanges.add(scc);
 	    }
 	    try {
-	    	modificationHistory.setCheckedChange(oldMethod);
-			modificationHistory.setCheckedChange(newMethod);
+	    	modificationHistory.setCheckedChange(method);
+			modificationHistory.setCheckedChange(method2);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

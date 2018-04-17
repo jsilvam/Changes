@@ -99,12 +99,12 @@ public class Main {
 	
 	public static void main(String[] args) throws IOException {
 		
-//		check("https://github.com/square/okhttp");
-//		check("https://github.com/square/retrofit");
-//		check("https://github.com/Kailashrb/scribe-java");
-//		check("https://github.com/jopt-simple/jopt-simple");
+		check("https://github.com/square/okhttp");
+		check("https://github.com/square/retrofit");
+		check("https://github.com/Kailashrb/scribe-java");
+		check("https://github.com/jopt-simple/jopt-simple");
 		check("https://github.com/notnoop/java-apns");	
-//		check("https://github.com/vkostyukov/la4j");
+		check("https://github.com/vkostyukov/la4j");
 //		
 		
 		
@@ -271,6 +271,7 @@ public class Main {
 //		System.out.println(aux1.length);
 //		for(String aux2:aux1)
 //			System.out.println(aux2);
+		
 		
 		
 	}
