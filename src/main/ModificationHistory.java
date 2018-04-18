@@ -70,10 +70,10 @@ public class ModificationHistory {
 			createdFields.put(signature, sc);
 			break;
 		case REMOVED_OBJECT_STATE:
-			signature=sc.getChangedEntity().getUniqueName();
+			signature = sc.getChangedEntity().getUniqueName();
 			signature=signature.substring(0, signature.indexOf(" : "));
 			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
-			deletedFields.put(sc.getChangedEntity().getUniqueName(), sc);
+			deletedFields.put(signature, sc);
 			break;
 		default:
 			break;
@@ -160,7 +160,7 @@ public class ModificationHistory {
 	
 	private void addAllDisposableChanges(List<SourceCodeChange> changes) {
 		for(SourceCodeChange scc: changes)
-			addChange(scc);
+			addDisposableChange(scc);
 	}
 	
 	private void addDisposableChange(SourceCodeChange sc) {
@@ -187,7 +187,7 @@ public class ModificationHistory {
 			signature=sc.getChangedEntity().getUniqueName();
 			signature=signature.substring(0, signature.indexOf(" : "));
 			signature = sa.removeSubString(signature, '<', '>', false).replaceAll("\\s","");
-			disposableDeletedFields.put(sc.getChangedEntity().getUniqueName(), sc);
+			disposableDeletedFields.put(signature, sc);
 			break;
 		default:
 			break;

@@ -70,8 +70,10 @@ public class Refactorings {
 					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, is saved as renamedMethod.
 						key=in.next();
 						value=in.next();
+						if(key.equals("retrofit.converter.SimpleXMLConverter.setStrict(boolean)"))
+							System.out.println();
 						String before=key.substring(0, key.lastIndexOf("."));
-						String after=value.substring(0, value.indexOf("."));
+						String after=value.substring(0, value.lastIndexOf("."));
 						if(!before.equals(after)) {
 							this.movedMethodsLeftToRight.put(key, value);
 							this.movedMethodsRightToLeft.put(value, key);

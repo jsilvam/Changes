@@ -99,7 +99,7 @@ public class Main {
 	
 	public static void main(String[] args) throws IOException {
 		
-		check("https://github.com/square/okhttp");
+//		check("https://github.com/square/okhttp");
 		check("https://github.com/square/retrofit");
 		check("https://github.com/Kailashrb/scribe-java");
 		check("https://github.com/jopt-simple/jopt-simple");

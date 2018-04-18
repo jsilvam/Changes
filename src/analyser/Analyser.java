@@ -108,10 +108,12 @@ public class Analyser {
 	private void analiseExtractedMethod(StructureEntityVersion root) {
 		String createdMethod = this.refactorings.getExtractedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getCreatedMethod(createdMethod);
+		boolean flag = true;
 		if(method==null) {//new method not found, new class.
 			method = modificationHistory.getDisposableCreatedMethod(createdMethod);
 			if(method==null) //new method not found, signature incompability
 				return;
+			flag = false;
 		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes= new LinkedList<SourceCodeChange>(root.getSourceCodeChanges());
@@ -253,7 +255,8 @@ public class Analyser {
 				}else
 					modificationHistory.setCheckedChange(scc);
 			}
-			modificationHistory.setCheckedChange(method);
+			if(flag)
+	    		modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -263,10 +266,12 @@ public class Analyser {
 	private void analiseInlinedMethod(StructureEntityVersion root) {
 		String deletedMethod = this.refactorings.getInlinedMethodSignature(root.getUniqueName());
 		SourceCodeChange method=modificationHistory.getDeletedMethod(deletedMethod);
+		boolean flag = true;
 		if(method==null) {//new method not found, new class.
 			method = modificationHistory.getDisposableDeletedMethod(deletedMethod);
 			if(method==null) //new method not found, signature incompability
 				return;
+			flag = false;
 		}
 		Enumeration<Node> body = method.getBodyStructure().preorderEnumeration();
 		List<SourceCodeChange> changes = new LinkedList<SourceCodeChange>(root.getSourceCodeChanges());
@@ -409,7 +414,8 @@ public class Analyser {
 					modificationHistory.setCheckedChange(scc);
 			}	
 			
-			modificationHistory.setCheckedChange(method);
+			if(flag)
+	    		modificationHistory.setCheckedChange(method);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -421,6 +427,7 @@ public class Analyser {
 	private void analiseMovedAttribute(SourceCodeChange field, String signature) {
 		SourceCodeChange field2;
 		List<SourceCodeChange> changes;
+		boolean flag = true;
 		if(field instanceof Insert) {
 			signature = this.refactorings.getOldMovedAttributeSignature(signature);
 			field2 = this.modificationHistory.getDeletedField(signature);
@@ -428,6 +435,7 @@ public class Analyser {
 				field2 = this.modificationHistory.getDisposableDeletedField(signature);
 				if(field2==null) 
 					return;
+				flag = false;
 			}
 			StructureEntityVersion rootEntity = field.getStructureEntityVersion();
 			changes = extractChanges(field2.getDeclarationStructure(), field.getDeclarationStructure(), rootEntity);
@@ -438,6 +446,7 @@ public class Analyser {
 				field2 = this.modificationHistory.getDisposableCreatedField(signature);
 				if(field2==null) 
 					return;
+				flag = false;
 			}
 			StructureEntityVersion rootEntity = field2.getStructureEntityVersion();
 			changes = extractChanges(field.getDeclarationStructure(), field2.getDeclarationStructure(), rootEntity);
@@ -447,7 +456,8 @@ public class Analyser {
 	    this.verifiedSourceCodeChanges.addAll(changes);
 	    try {
 	    	modificationHistory.setCheckedChange(field);
-			modificationHistory.setCheckedChange(field2);
+	    	if(flag)
+	    		modificationHistory.setCheckedChange(field2);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -457,6 +467,7 @@ public class Analyser {
 	private void analiseMovedMethod(SourceCodeChange method, String signature) {
 		SourceCodeChange method2;
 		List<SourceCodeChange> changes;
+		boolean flag = true;
 		if(method instanceof Insert) {
 			signature = this.refactorings.getOldMovedMethodSignature(signature);
 			method2 = this.modificationHistory.getDeletedMethod(signature);
@@ -464,6 +475,7 @@ public class Analyser {
 				method2 = this.modificationHistory.getDisposableDeletedMethod(signature);
 				if(method2==null) 
 					return;
+				flag = false;
 			}
 			StructureEntityVersion rootEntity = method.getStructureEntityVersion();
 			changes = extractChanges(method2.getDeclarationStructure(), method.getDeclarationStructure(), rootEntity);
@@ -475,6 +487,7 @@ public class Analyser {
 				method2 = this.modificationHistory.getDisposableCreatedMethod(signature);
 				if(method2==null) 
 					return;
+				flag = false;
 			}
 			StructureEntityVersion rootEntity = method2.getStructureEntityVersion();
 			changes = extractChanges(method.getDeclarationStructure(), method2.getDeclarationStructure(), rootEntity);
@@ -489,7 +502,8 @@ public class Analyser {
 	    }
 	    try {
 	    	modificationHistory.setCheckedChange(method);
-			modificationHistory.setCheckedChange(method2);
+	    	if(flag)
+	    		modificationHistory.setCheckedChange(method2);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
