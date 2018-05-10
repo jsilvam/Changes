@@ -14,7 +14,6 @@ import java.util.Scanner;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.eclipse.jdt.internal.compiler.ast.ReturnStatement;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
