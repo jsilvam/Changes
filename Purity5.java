@@ -14,7 +14,7 @@ import saferefactor.core.SafeRefactor;
 import saferefactor.core.SafeRefactorException;
 import saferefactor.core.util.Project;
 
-public class Purity{
+public class Purity implements Integer{
 	
 	private String urlRepository;
 	
@@ -128,9 +128,8 @@ public class Purity{
 	private class Teste{
 		String m;
 		
-		private int getM() {
-			
-			
+		private String getM() {
+			return this.m;
 		}
 		
 		private void setM(String m1, int g, String gh) {

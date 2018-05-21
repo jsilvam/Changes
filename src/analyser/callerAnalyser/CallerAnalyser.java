@@ -7,6 +7,7 @@ import java.util.Set;
 
 import analyser.StringAnalyser;
 import analyser.callerAnalyser.CallerPattern.CallerType;
+import ch.uzh.ifi.seal.changedistiller.model.classifiers.ChangeType;
 import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
@@ -34,6 +35,13 @@ public class CallerAnalyser {
 		for(String signature: signatures)
 			callerPatterns.add(new CallerPattern(signature));
 		
+		signatures = refactorings.getChangedClassSignatures().values();
+		for(String signature: signatures) {
+			CallerPattern cp = new CallerPattern(signature);
+			cp.setType(CallerType.Class);
+			callerPatterns.add(cp);
+		}
+		
 		Set<String> signatures2 = refactorings.getMovedMethodsLeftToRight().keySet();
 		for(String signature: signatures2)
 			callerPatterns.add(new CallerPattern(signature));
@@ -53,6 +61,13 @@ public class CallerAnalyser {
 		signatures2 = refactorings.getRenamedMethods().keySet();
 		for(String signature: signatures2)
 			callerPatterns.add(new CallerPattern(signature));
+		
+		signatures2 = refactorings.getChangedClassSignatures().keySet();
+		for(String signature: signatures) {
+			CallerPattern cp = new CallerPattern(signature);
+			cp.setType(CallerType.Class);
+			callerPatterns.add(cp);
+		}
 	}
 	
 	public void markCallers(ModificationHistory mh) {
@@ -84,7 +99,7 @@ public class CallerAnalyser {
 	}
 	
 	public boolean fitPattern(SourceCodeChange caller, CallerPattern callee) {
-		return fitMethodPattern(caller,callee) || fitFieldPattern(caller,callee);
+		return fitMethodPattern(caller,callee) || fitFieldPattern(caller,callee) || fitClassPattern(caller, callee);
 	}
 	
 	private boolean fitMethodPattern(SourceCodeChange caller, CallerPattern callee) {
@@ -111,7 +126,7 @@ public class CallerAnalyser {
 			return false;
 		
 		String statment = caller.getChangedEntity().getUniqueName();
-		String regex = ".*\\.\\s"+callee.getShortName()+"\\W.*";
+		String regex = ".*\\.\\s*"+callee.getShortName()+"(?!\\s*\\()\\W.*";
 		if(statment.matches(regex))
 			return true;
 		
@@ -120,8 +135,8 @@ public class CallerAnalyser {
 		if(bodyContaisVariable(root,callee.getShortName()))
 			return false;
 		
-		return statment.matches(callee.getShortName()+"\\W.*")
-				|| statment.matches(".*\\W"+callee.getShortName()+"\\W.*");
+		return statment.matches(callee.getShortName()+"(?!\\s*\\()\\W.*")
+				|| statment.matches(".*\\W"+callee.getShortName()+"(?!\\s*\\()\\W.*");
 	}
 	
 	private boolean bodyContaisVariable(Node root, String name) {
@@ -150,7 +165,28 @@ public class CallerAnalyser {
 			declaration = statment.substring(0, index) + ";";
 		}
 		
-		return declaration.matches(".*(\\s|\\W)+"+name+"(\\s|\\W).*");
+		return declaration.matches(".*\\W+"+name+"\\W.*");
+	}
+	
+	
+	//Incomplete
+	private boolean fitClassPattern(SourceCodeChange caller, CallerPattern callee) {
+		if(callee.getType() != CallerType.Class)
+			return false;
+		switch(caller.getChangeType()) {
+			case ATTRIBUTE_TYPE_CHANGE:
+				return caller.getChangedEntity().getUniqueName().matches("(\\w|\\.)*"+callee.getShortName());
+			case RETURN_TYPE_CHANGE:
+			case PARAMETER_TYPE_CHANGE:
+				return caller.getChangedEntity().getUniqueName().matches(".*: (\\w|\\.)*"+callee.getShortName());
+			default:
+				SourceCodeEntity sce = caller.getChangedEntity();
+				if(sce.getType()==JavaEntityType.VARIABLE_DECLARATION_STATEMENT ||
+						sce.getType()==JavaEntityType.FOREACH_STATEMENT)
+					return sce.getUniqueName().matches("(\\w|\\.|<)*"+callee.getShortName()+"\\W.*");
+				
+		}
+		return false;
 	}
 	
 	public int countParemetersFromInvocation(String str) {

@@ -14,9 +14,9 @@ import saferefactor.core.SafeRefactor;
 import saferefactor.core.SafeRefactorException;
 import saferefactor.core.util.Project;
 
-public class Purity {
+public class Purity implements String{
 	
-	private String urlRepository;
+	private int urlRepository;
 	
 	public Purity(String urlRepository){
 		this.urlRepository=urlRepository;
@@ -31,22 +31,23 @@ public class Purity {
 	}
 	
 
-	public int check(String commit, String parent) throws Exception{
+	public double check(String commit, int parent) throws Exception{
+		
+		new String("teste");  //CLASS_INSTANCE_CREATION
+		List<String> t; //VARIABLE_DECLARATION_STATEMENT
+		for(String c:t);  //FOREACH_STATEMENT;
+		for(int i=0; i<10; i++);
 		
 		
 		GithubDownloader git=new GithubDownloader(urlRepository);
 		ZipExtractor ze=new ZipExtractor();
 		
 		
-		
 		File targetFile=git.downloadCommit(commit);
 		File targetFolder=ze.extract(targetFile, new File(git.getLocation(),commit));
 		
-		
 		File sourceFile=git.downloadCommit(parent);
 		File sourceFolder=ze.extract(sourceFile, new File(git.getLocation(),parent));
-		
-		
 		
 		//File targetFolder=new File("C:\\tmp\\Projeto\\Downloads\\jasmine-maven-plugin\\88e4387b52361442b7a70c84cd2e3625258d4ae2");
 		//File sourceFolder=new File("C:\\tmp\\Projeto\\Downloads\\jasmine-maven-plugin\\36217276b60cb69c9acf3a1f21b7017e390210b5");
@@ -68,7 +69,6 @@ public class Purity {
 		if (libFolder.exists())
 			source.setLibFolder(libFolder);
 		System.out.println("Source project: "+source.getLibFolder());
-		
 		
 		Project target = new Project();
 		target.setProjectFolder(targetFolder);
@@ -105,7 +105,10 @@ public class Purity {
 			e.printStackTrace();
 			deleteDirectory(git.getLocation());
 			return -1;
+		}catch(Exceptio e) { //CATCH_CLAUSE
+			
 		}
+		
 		
 		Report result=sr.getReport();
 		
@@ -134,7 +137,7 @@ public class Purity {
 	private class Teste{
 		String m;
 		
-		private double getM() {
+		private String getM() {
 			return this.m;
 		}
 		

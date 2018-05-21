@@ -104,6 +104,7 @@ public class Main {
 		check("https://github.com/jopt-simple/jopt-simple");
 		check("https://github.com/notnoop/java-apns");	
 		check("https://github.com/vkostyukov/la4j");
+		check("https://github.com/apache/incubator-dubbo");
 //		
 		
 		
@@ -134,6 +135,8 @@ public class Main {
 //		    	System.out.println("change.getLabel():  "+change.getLabel());
 //		    	System.out.println("change.getChangeType():  "+change.getChangeType());
 //		    	
+//		    	System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
+//		    	System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
 //		        System.out.println("change.toString():  "+change.toString());
 //		        System.out.println();
 //		        
@@ -187,7 +190,7 @@ public class Main {
 ////				while(body.hasMoreElements()) {
 ////					Node n=body.nextElement();
 ////					System.out.println(n.toString()+"  "+n.isMatched());
-////				}
+//				}
 //		        
 //		        
 //		    }
@@ -270,7 +273,6 @@ public class Main {
 //		System.out.println(aux1.length);
 //		for(String aux2:aux1)
 //			System.out.println(aux2);
-		
 		
 		
 	}

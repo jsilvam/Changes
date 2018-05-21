@@ -12,7 +12,8 @@ public class CallerPattern {
 	
 	public enum CallerType{
 		Field,
-		Method;
+		Method,
+		Class;
 	}
 	
 	public CallerPattern(String shortName, int nParameters, CallerType type) {
@@ -53,7 +54,7 @@ public class CallerPattern {
 		fullName = fullName.replaceAll("\\s", "");
 		int beginIndex = fullName.lastIndexOf("(");
 		if(beginIndex<0) {
-			this.nParameters = 0;
+			this.nParameters = -1;
 			return;
 		}
 		int endIndex = fullName.indexOf(")");
