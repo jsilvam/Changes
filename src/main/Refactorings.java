@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -19,18 +20,15 @@ public class Refactorings {
 	private Map<String, String> movedAttributesRightToLeft;
 	private Map<String, String> movedMethodsRightToLeft;
 	
-	private List<String> addedClasses;
-	
 	private Map<String, String> renamedMethods;
-	
-	
+	private List<String> addedClasses;
 	private String parent;
 	
-	public Refactorings(String csvPath,String commit) throws FileNotFoundException {
-		init(csvPath, commit);
+	public Refactorings(File csvFile,String commit) throws FileNotFoundException {
+		init(csvFile, commit);
 	}
 	
-	private void init(String csvPath,String commit) throws FileNotFoundException {
+	private void init(File csvFile,String commit) throws FileNotFoundException {
 		
 		this.changedClassSignatures = new HashMap<String,String>();
 		this.extractedMethods = new HashMap<String,String>();
@@ -45,7 +43,7 @@ public class Refactorings {
 		this.addedClasses = new ArrayList<String>();
 		
 		
-		Scanner in = new Scanner(new FileReader(csvPath)).useDelimiter(";");
+		Scanner in = new Scanner(csvFile).useDelimiter(";");
 		
 		boolean flag=false;  //responsible for stopping the loop when there is no more entries of the selected commit
 		String key,value;
@@ -55,7 +53,6 @@ public class Refactorings {
 			if(in.next().equals(commit)) {
 				flag=true;
 				this.parent=in.next();
-				in.next();
 				switch(in.next()) {
 					case "Extract Method":
 						key=in.next();
@@ -70,8 +67,8 @@ public class Refactorings {
 					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, is saved as renamedMethod.
 						key=in.next();
 						value=in.next();
-						if(key.equals("retrofit.converter.SimpleXMLConverter.setStrict(boolean)"))
-							System.out.println();
+//						if(key.equals("retrofit.converter.SimpleXMLConverter.setStrict(boolean)"))
+//							System.out.println();
 						String before=key.substring(0, key.lastIndexOf("."));
 						String after=value.substring(0, value.lastIndexOf("."));
 						if(!before.equals(after)) {

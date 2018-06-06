@@ -2,12 +2,15 @@ package analyser.callerAnalyser;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
+import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
+
 public class CallerPattern {
 	
 	private String shortName;
 	private int nParameters;
 	private CallerType type;
-	public List<Integer> test;
 	
 	
 	public enum CallerType{
@@ -85,5 +88,20 @@ public class CallerPattern {
 			this.type = CallerType.Method;
 			setnParametersFromFullName(fullName);
 		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        CallerPattern other = (CallerPattern) obj;
+        return new EqualsBuilder().append(getType(), other.getType())
+                .append(getnParameters(), other.getnParameters())
+                .append(getShortName(), other.getShortName())
+                .isEquals();
 	}
 }

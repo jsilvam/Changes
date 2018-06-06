@@ -15,8 +15,10 @@ public class CSV {
 	
 	public CSV(File file) throws IOException {
 		writer = new FileWriter(file);
-		writer.write("Commit;Change;"
+		writer.write("Commit;ChangeType;"
 				+ "ChangedEntity;"
+				+ "EntityType;"
+				+ "isRefactoringRelated;"
 				+ "rootEntity");
 		writer.flush();
 	}
@@ -38,19 +40,25 @@ public class CSV {
 						commit,
 						scc.getChangeType().toString(),
 						"",
+						scc.getChangedEntity().getType().toString(),
+						scc.isRefactoringRelated(),
 						root);
 			else
 				addLine(commit,
 						scc.getChangeType().toString(),
-						scc.getChangedEntity().getUniqueName(),
+						"",//scc.getChangedEntity().getUniqueName(),
+						scc.getChangedEntity().getType().toString(),
+						scc.isRefactoringRelated(),
 						root);
 		}
 	}
 	
-	public void addLine(String commit, String change, String changedEntity, String rootEntity) throws IOException { 
+	public void addLine(String commit, String change, String changedEntity, String entityType, boolean isRefactoringRelated, String rootEntity) throws IOException { 
 		writer.write("\n"+commit);
 		writer.write(";"+change);
 		writer.write(";\""+changedEntity+"\"");
+		writer.write(";\""+entityType+"\"");
+		writer.write(";\""+isRefactoringRelated+"\"");
 		writer.write(";\""+rootEntity+"\"");
 		writer.flush();
 	}

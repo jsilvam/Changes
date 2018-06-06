@@ -164,7 +164,7 @@ public class Analyser {
 								if ((scc1 != null 
 										&& !verifiedSourceCodeChanges.contains(scc1)
 										&& !this.callerAnalyser.isCaller(scc1))) {
-									addChange(scc1);
+									addRefactoringRelatedChange(scc1);
 								}
 							}
 							break;
@@ -207,7 +207,7 @@ public class Analyser {
 							if ((scc1 != null 
 									&& !verifiedSourceCodeChanges.contains(scc1)
 									&& !this.callerAnalyser.isCaller(scc1)))
-								addChange(scc1);
+								addRefactoringRelatedChange(scc1);
 						}
 						break;
 					}
@@ -227,7 +227,7 @@ public class Analyser {
 							match.getSourceCodeChangeParent(),
 							match.getNodeParent());
 					if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-						addChange(scc1);
+						addRefactoringRelatedChange(scc1);
 					}
 				}
 			}	
@@ -241,7 +241,7 @@ public class Analyser {
 					SourceCodeChange scc = classifier.classify(
 							new Insert(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
 					if ((scc != null) && !verifiedSourceCodeChanges.contains(scc)) {
-						addChange(scc);
+						addRefactoringRelatedChange(scc);
 					}	
 				}
 			}
@@ -249,11 +249,9 @@ public class Analyser {
 			for(SourceCodeChange scc: changes) {
 				if (!verifiedSourceCodeChanges.contains(scc)
 						&& !this.callerAnalyser.isCaller(scc)
-						&& !this.callerAnalyser.isCaller(scc, method)) {
-					addChange(scc);
-					modificationHistory.setCheckedChange(scc);
-				}else
-					modificationHistory.setCheckedChange(scc);
+						&& !this.callerAnalyser.isCaller(scc, method))
+					addRefactoringRelatedChange(scc);
+				modificationHistory.setCheckedChange(scc);
 			}
 			if(flag)
 	    		modificationHistory.setCheckedChange(method);
@@ -321,7 +319,7 @@ public class Analyser {
 								if ((scc1 != null) 
 										&& !verifiedSourceCodeChanges.contains(scc1)
 										&& !this.callerAnalyser.isCaller(scc1)) {
-									addChange(scc1);
+									addRefactoringRelatedChange(scc1);
 									
 								}
 							}
@@ -364,7 +362,7 @@ public class Analyser {
 							if ((scc1 != null 
 									&& !verifiedSourceCodeChanges.contains(scc1)
 									&& !this.callerAnalyser.isCaller(scc1))) 
-								addChange(scc1);
+								addRefactoringRelatedChange(scc1);
 						}
 						break;
 					}
@@ -383,7 +381,7 @@ public class Analyser {
 							match.getSourceCodeChangeParent());
 									
 					if ((scc1 != null) && !verifiedSourceCodeChanges.contains(scc1)) {
-						addChange(scc1);
+						addRefactoringRelatedChange(scc1);
 					}
 				}
 			}
@@ -399,7 +397,7 @@ public class Analyser {
 					SourceCodeChange scc = classifier.classify(
 							new Delete(method.getStructureEntityVersion(),node.getEntity(),parent.getEntity()));
 					if (!verifiedSourceCodeChanges.contains(scc)) {
-						addChange(scc);
+						addRefactoringRelatedChange(scc);
 					}	
 				}
 			}
@@ -407,11 +405,9 @@ public class Analyser {
 			for(SourceCodeChange scc: changes) {
 				if ((scc != null) 
 						&& !verifiedSourceCodeChanges.contains(scc)
-						&& !this.callerAnalyser.isCaller(scc, method)) {
-					addChange(scc);
-					modificationHistory.setCheckedChange(scc);
-				}else
-					modificationHistory.setCheckedChange(scc);
+						&& !this.callerAnalyser.isCaller(scc, method))
+					addRefactoringRelatedChange(scc);
+				modificationHistory.setCheckedChange(scc);
 			}	
 			
 			if(flag)
@@ -453,7 +449,8 @@ public class Analyser {
 		}
 		
 		 
-	    this.verifiedSourceCodeChanges.addAll(changes);
+	    for(SourceCodeChange scc: changes)
+	    	addRefactoringRelatedChange(scc);
 	    try {
 	    	modificationHistory.setCheckedChange(field);
 	    	if(flag)
@@ -498,7 +495,7 @@ public class Analyser {
 	    for(SourceCodeChange scc: changes) {
 	    	if(scc.getChangeType()!=ChangeType.METHOD_RENAMING
 	    			&& !callerAnalyser.isCaller(scc))
-	    		this.verifiedSourceCodeChanges.add(scc);
+		    	addRefactoringRelatedChange(scc);
 	    }
 	    try {
 	    	modificationHistory.setCheckedChange(method);
@@ -550,6 +547,13 @@ public class Analyser {
 	
 	private void addChange(SourceCodeChange scc) {
 		if(scc!=null){
+			this.verifiedSourceCodeChanges.add(scc);
+		}
+	}
+	
+	private void addRefactoringRelatedChange(SourceCodeChange scc) {
+		if(scc!=null){
+			scc.setRefactoringRelated(true);
 			this.verifiedSourceCodeChanges.add(scc);
 		}
 	}

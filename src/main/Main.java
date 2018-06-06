@@ -1,10 +1,12 @@
 package main;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -43,26 +45,26 @@ import utils.FileUtils;
 
 public class Main {
 	
+	private static String dataFolder = "Projetos Dataset";
+	private static File dir = new File(System.getProperty("user.home") + File.separator + "Dropbox" + File.separator + "UFCG" + File.separator + 
+			"Projeto" + File.separator + "Dados" + File.separator + dataFolder);
+	
 	private static void check(String repositoryUrl) throws IOException  {
+		String projectName = repositoryUrl.substring(repositoryUrl.lastIndexOf("/")+1);
 		
-		String dir;
-		if(System.getProperty("os.name").contains("Linux"))
-			dir  = "/home/jaziel/Dropbox/UFCG/Projeto/Dados/CSVs/"; //Linux
-		else
-			dir  = "C:\\Users\\Jaziel Moreira\\Dropbox\\UFCG\\Projeto\\Dados\\CSVs\\"; //Windows
+		File refactoringsCSV= new File(dir,"Part 1" + File.separator + projectName+".csv");
+		File isefactoringFile = new File(dir,"Part 2" + File.separator + projectName+".csv");
+		if(!refactoringsCSV.exists() || !isefactoringFile.exists())
+			return;
 		
-		String aux=repositoryUrl.substring(repositoryUrl.lastIndexOf("/")+1);
+		File csvFile = new File(dir, "Part 3" + File.separator + projectName+".csv");
+		File logFile = new File(dir, "Part 3" + File.separator + "log" + File.separator + projectName+" - log.txt");
 		
-		
-		String refactoringsCSV=dir+"Refatoramentos/Part 1/"+aux+".csv";
-		CSV result= new CSV(new File(dir+"Mudancas/"+aux+".csv"));
-		Scanner in = new Scanner(new FileReader(dir+"Refatoramentos/Part 2/"+aux+".csv")).useDelimiter(";");
-		PrintStream ps = new PrintStream(
-			     new FileOutputStream(dir+"Mudancas/Logs/"+aux+" - log.txt", true));
+		CSV result= new CSV(csvFile);
+		Scanner in = new Scanner(isefactoringFile).useDelimiter(";");
+		PrintStream ps = new PrintStream(new FileOutputStream(logFile, true));
 		
 		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
-		
-		
 		
 		in.nextLine();
 		while(in.hasNext()) {
@@ -83,28 +85,29 @@ public class Main {
 		ps.close();
 	}
 	
-	private static int distance(Node node, Node parent) {
-		Enumeration path= node.pathFromAncestorEnumeration(parent);
-		int cont = 0;
-		while(path.hasMoreElements()) {
-			path.nextElement();
-			cont++;
-		}
-			
-		return cont;
-	}
-	
-
 	
 	public static void main(String[] args) throws IOException {
+		check("https://github.com/Athou/commafeed");
+//		File urlsFile = new File ("urls3Part.txt");
+//		Scanner urls = new Scanner(urlsFile);
+//		
+//		while(urls.hasNextLine()){
+//			try {
+//				check(urls.nextLine());
+//				
+//			}catch(FileNotFoundException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		urls.close();
 		
 //		check("https://github.com/square/okhttp");
-		check("https://github.com/square/retrofit");
-		check("https://github.com/Kailashrb/scribe-java");
-		check("https://github.com/jopt-simple/jopt-simple");
-		check("https://github.com/notnoop/java-apns");	
-		check("https://github.com/vkostyukov/la4j");
-		check("https://github.com/apache/incubator-dubbo");
+//		check("https://github.com/square/retrofit");
+//		check("https://github.com/Kailashrb/scribe-java");
+//		check("https://github.com/jopt-simple/jopt-simple");
+//		check("https://github.com/notnoop/java-apns");	
+//		check("https://github.com/vkostyukov/la4j");
+//		check("https://github.com/apache/incubator-dubbo");
 //		
 		
 		

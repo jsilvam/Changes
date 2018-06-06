@@ -17,18 +17,18 @@ import utils.ZipExtractor;
 
 public class Changes {
 	private String urlRepository;
-	private String refactoringsCSVPath;
+	private File refactoringsCSVFile;
 	private CSV resultCSV;
 	
-	public Changes(String urlRepository, String refactoringsCSVPath, CSV resultCSV){
+	public Changes(String urlRepository, File refactoringsCSVPath, CSV resultCSV){
 		this.urlRepository = urlRepository;
-		this.refactoringsCSVPath = refactoringsCSVPath;
+		this.refactoringsCSVFile = refactoringsCSVPath;
 		this.resultCSV = resultCSV;
 	}
 	
 	public void extractChanges(String commit) throws Exception {
 		//initialize
-		Refactorings refactorings = new Refactorings(this.refactoringsCSVPath,commit); //class not finished.
+		Refactorings refactorings = new Refactorings(this.refactoringsCSVFile,commit); //class not finished.
 		String parent=refactorings.getParent();
 		GithubDownloader git = new GithubDownloader(this.urlRepository);
 		ModificationHistory modificationHistory = new ModificationHistory();

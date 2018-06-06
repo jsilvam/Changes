@@ -2,6 +2,7 @@ package analyser.callerAnalyser;
 
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -12,18 +13,17 @@ import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
 import ch.uzh.ifi.seal.changedistiller.model.entities.Insert;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
+import ch.uzh.ifi.seal.changedistiller.model.entities.Update;
 import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
 import main.ModificationHistory;
 import main.Refactorings;
 
 public class CallerAnalyser {
 	
-	private LinkedList<CallerPattern> callerPatterns;
-	
-	
+	private Set<CallerPattern> callerPatterns;
 	
 	public CallerAnalyser() {
-		callerPatterns = new LinkedList<CallerPattern>();
+		callerPatterns = new HashSet<CallerPattern>();
 	}
 	
 	public void extractShortNames(Refactorings refactorings) {
@@ -85,10 +85,11 @@ public class CallerAnalyser {
 	}
 	
 	public boolean isCaller(SourceCodeChange scc) {
-		for(CallerPattern cp: callerPatterns) 
-			if(fitPattern(scc,cp)) {
-				return true;
-			}
+		if(scc instanceof Update)
+			for(CallerPattern cp: callerPatterns) 
+				if(fitPattern(scc,cp)) {
+					return true;
+				}
 		return false;
 	}
 	
@@ -210,6 +211,8 @@ public class CallerAnalyser {
 			}else if(sequence[i]==',' && count==1)
 				result++;
 		}
+		if(count>0)
+			return -1;
 		if(end-begin > 1)
 			result++;
 		return result;
