@@ -174,6 +174,7 @@ public class Analyser {
 			}
 			
 			for(Node node: returnStatements) {
+				node.disableMatched();
 				String returnExpression = node.getEntity().getUniqueName();
 				for(SourceCodeChange scc: changes) {
 					if(isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())
@@ -181,20 +182,23 @@ public class Analyser {
 						modificationHistory.setCheckedChange(scc);
 						matches.add(new MatchedPair(node,scc));
 						changes.remove(scc);
-						returnStatements.remove(node);
+						node.enableMatched();
+//						returnStatements.remove(node);
 						break;
 					}
 				}
 			}
 			
 			for(Node node: returnStatements) {
+				if(node.isMatched())
+					continue;
 				String returnExpression = node.getEntity().getUniqueName();
 				for(SourceCodeChange scc: changes) {
 					if(this.strAnalyser.similarity(scc.getChangedEntity().getUniqueName(),returnExpression) >= this.lTh) {
 						matches.add(new MatchedPair(node,scc));
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
-						returnStatements.remove(node);
+//						returnStatements.remove(node);
 						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
 							Node parent=(Node) node.getParent();
 							SourceCodeChange scc1 = classifier.classify(
@@ -331,6 +335,7 @@ public class Analyser {
 			}
 			
 			for(Node node: returnStatements) {
+				node.disableMatched();
 				String returnExpression = node.getEntity().getUniqueName();
 				for(SourceCodeChange scc: changes) {
 					if(isSameEntityType(( (Node)node.getParent() ).getEntity(),scc.getParentEntity())
@@ -338,20 +343,23 @@ public class Analyser {
 						modificationHistory.setCheckedChange(scc);
 						matches.add(new MatchedPair(node,scc));
 						changes.remove(scc);
-						returnStatements.remove(node);
+						node.enableMatched();
+						//returnStatements.remove(node);
 						break;
 					}
 				}
 			}
 			
 			for(Node node: returnStatements) {
+				if(node.isMatched())
+					continue;
 				String returnExpression = node.getEntity().getUniqueName();
 				for(SourceCodeChange scc: changes) {
 					if(this.strAnalyser.similarity(scc.getChangedEntity().getUniqueName(),returnExpression) >= this.lTh) {
 						matches.add(new MatchedPair(node,scc));
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
-						returnStatements.remove(node);
+						//returnStatements.remove(node);
 						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
 							Node parent=(Node) node.getParent();
 							SourceCodeChange scc1 = classifier.classify(
@@ -541,18 +549,27 @@ public class Analyser {
 		Injector injector = Guice.createInjector(new JavaChangeDistillerModule());
 	    DistillerFactory df = injector.getInstance(DistillerFactory.class);
         Distiller distiller = df.create(rootEntity);
+        disableMatchedNodes(left);
+        disableMatchedNodes(right);
         distiller.extractClassifiedSourceCodeChanges(left, right);
         return distiller.getSourceCodeChanges();
     }
 	
+	private void disableMatchedNodes(Node n) {
+		if(n == null)
+			return;
+		for (Enumeration<Node> nodes = n.postorderEnumeration(); nodes.hasMoreElements();)
+            nodes.nextElement().disableMatched();
+	}
+	
 	private void addChange(SourceCodeChange scc) {
-		if(scc!=null){
+		if(scc!=null && !verifiedSourceCodeChanges.contains(scc)){
 			this.verifiedSourceCodeChanges.add(scc);
 		}
 	}
 	
 	private void addRefactoringRelatedChange(SourceCodeChange scc) {
-		if(scc!=null){
+		if(scc!=null && !verifiedSourceCodeChanges.contains(scc)){
 			scc.setRefactoringRelated(true);
 			this.verifiedSourceCodeChanges.add(scc);
 		}

@@ -76,11 +76,9 @@ public class Changes {
 		//SaveChanges
 		resultCSV.addAll(verifiedSourceCodeChanges,commit);
 		
-		System.out.println("\n\nChanges...\n");
-		
 		deleteDirectory(git.getLocation());
 		
-		
+		System.out.println("\n\nFim commit: "+commit+"\n");
 	}
 	
 	

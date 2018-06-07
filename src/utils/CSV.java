@@ -63,4 +63,8 @@ public class CSV {
 		writer.flush();
 	}
 	
+	public void close() throws IOException {
+		writer.close();
+	}
+	
 }

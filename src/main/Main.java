@@ -67,12 +67,15 @@ public class Main {
 		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
 		
 		in.nextLine();
+		int count = 0;
 		while(in.hasNext()) {
 			String commit=in.next();
 			if(in.nextLine().equals(";0")) {
 				try {
+					count++;
 					changes.extractChanges(commit);
 				} catch (Exception e) {
+					count--;
 					System.out.println("Get Changes: Error");
 					e.printStackTrace();
 					ps.println("Commit error: "+commit);
@@ -83,11 +86,69 @@ public class Main {
 		}
 		in.close();
 		ps.close();
+		result.close();
+//		if(count==0 && csvFile.exists())
+//			csvFile.delete();
 	}
 	
 	
 	public static void main(String[] args) throws IOException {
-		check("https://github.com/Athou/commafeed");
+		check("https://github.com/rackerlabs/blueflood");
+		check("https://github.com/spotify/helios");
+		check("https://github.com/scobal/seyren");
+		check("https://github.com/orfjackal/retrolambda");
+		check("https://github.com/google/truth");
+		check("https://github.com/selendroid/selendroid");
+		check("https://github.com/Atmosphere/atmosphere");
+		check("https://github.com/Graylog2/graylog2-server");
+		check("https://github.com/datastax/java-driver");
+		check("https://github.com/robovm/robovm");
+		check("https://github.com/spring-projects/spring-data-mongodb");
+		check("https://github.com/antlr/antlr4");
+		check("https://github.com/Netflix/feign");
+		check("https://github.com/square/okhttp");
+		check("https://github.com/glyptodon/guacamole-client");
+		check("https://github.com/dropwizard/metrics");
+		check("https://github.com/apache/giraph");
+		check("https://github.com/cucumber/cucumber-jvm");
+		check("https://github.com/square/wire");
+		check("https://github.com/HubSpot/Singularity");
+		check("https://github.com/BroadleafCommerce/BroadleafCommerce");
+		check("https://github.com/jayway/rest-assured");
+		check("https://github.com/addthis/hydra");
+		check("https://github.com/spring-projects/spring-data-rest");
+		check("https://github.com/GoClipse/goclipse");
+//		check("https://github.com/Athou/commafeed");
+//		check("https://github.com/bennidi/mbassador");
+//		check("https://github.com/brettwooldridge/HikariCP");
+//		check("https://github.com/opentripplanner/OpenTripPlanner");
+//		check("https://github.com/spring-projects/spring-data-neo4j");
+//		check("https://github.com/spring-projects/spring-data-jpa");
+//		check("https://github.com/thymeleaf/thymeleaf");
+//		check("https://github.com/square/javapoet");
+//		check("https://github.com/jline/jline2");
+//		check("https://github.com/plutext/docx4j");
+//		check("https://github.com/zeromq/jeromq");
+//		check("https://github.com/xetorthio/jedis");
+//		check("https://github.com/NLPchina/ansj_seg");
+//		check("https://github.com/alibaba/druid");
+//		check("https://github.com/clojure/clojure");
+//		check("https://github.com/spring-projects/spring-hateoas");
+//		check("https://github.com/HdrHistogram/HdrHistogram");
+//		check("https://github.com/AdoptOpenJDK/jitwatch");
+//		check("https://github.com/Graylog2/graylog2-server");
+//		check("https://github.com/nutzam/nutz");
+//		check("https://github.com/belaban/JGroups");
+//		check("https://github.com/clojure/clojure");
+		
+//		String url = 
+//				"https://github.com/bennidi/mbassador";
+//		check(url);
+//		check("https://github.com/brettwooldridge/HikariCP");
+//		check("https://github.com/opentripplanner/OpenTripPlanner");
+//		check("https://github.com/spring-projects/spring-data-neo4j");
+//		check("https://github.com/spring-projects/spring-data-jpa");
+//		check("https://github.com/thymeleaf/thymeleaf");
 //		File urlsFile = new File ("urls3Part.txt");
 //		Scanner urls = new Scanner(urlsFile);
 //		

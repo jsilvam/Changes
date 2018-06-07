@@ -42,7 +42,8 @@ public class CallerPattern {
 		if(lastIndex<0)
 			this.shortName = fullName.substring(fullName.lastIndexOf('.')+1);
 		else	
-			this.shortName = fullName.substring(fullName.lastIndexOf('.')+1,lastIndex);
+			fullName = fullName.substring(0, lastIndex);
+			this.shortName = fullName.substring(fullName.lastIndexOf('.')+1);
 	}
 	
 	public int getnParameters() {
