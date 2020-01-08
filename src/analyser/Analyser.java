@@ -111,7 +111,7 @@ public class Analyser {
 		boolean flag = true;
 		if(method==null) {//new method not found, new class.
 			method = modificationHistory.getDisposableCreatedMethod(createdMethod);
-			if(method==null) //new method not found, signature incompability
+			if(method==null) //new method not found, signature incompatibility
 				return;
 			flag = false;
 		}
@@ -183,7 +183,6 @@ public class Analyser {
 						matches.add(new MatchedPair(node,scc));
 						changes.remove(scc);
 						node.enableMatched();
-//						returnStatements.remove(node);
 						break;
 					}
 				}
@@ -198,7 +197,6 @@ public class Analyser {
 						matches.add(new MatchedPair(node,scc));
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
-//						returnStatements.remove(node);
 						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
 							Node parent=(Node) node.getParent();
 							SourceCodeChange scc1 = classifier.classify(
@@ -271,7 +269,7 @@ public class Analyser {
 		boolean flag = true;
 		if(method==null) {//new method not found, new class.
 			method = modificationHistory.getDisposableDeletedMethod(deletedMethod);
-			if(method==null) //new method not found, signature incompability
+			if(method==null) //new method not found, signature incompatibility
 				return;
 			flag = false;
 		}
@@ -344,7 +342,6 @@ public class Analyser {
 						matches.add(new MatchedPair(node,scc));
 						changes.remove(scc);
 						node.enableMatched();
-						//returnStatements.remove(node);
 						break;
 					}
 				}
@@ -359,7 +356,6 @@ public class Analyser {
 						matches.add(new MatchedPair(node,scc));
 						modificationHistory.setCheckedChange(scc);
 						changes.remove(scc);
-						//returnStatements.remove(node);
 						if(!scc.getChangedEntity().getUniqueName().equals(returnExpression)) {
 							Node parent=(Node) node.getParent();
 							SourceCodeChange scc1 = classifier.classify(

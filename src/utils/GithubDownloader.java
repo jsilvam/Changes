@@ -17,18 +17,14 @@ public class GithubDownloader {
 	
 	public GithubDownloader(String repositoryUrl){
 		this.repositoryUrl=repositoryUrl;
-		String aux=repositoryUrl.substring(repositoryUrl.lastIndexOf("/"));
-		
-		aux = System.getProperty("java.io.tmpdir") + File.separator + "Projeto" + File.separator 
-				+ "Downloads" + File.separator + aux;
-		this.location = new File(aux);
+		this.location = new File(FileUtils.getDownloadFolder(), getProjectNameFromUrl(repositoryUrl));
 		
 		if(!this.location.exists())
 			this.location.mkdirs();
 	}
 	
-	public boolean setLocation(String location){
-		this.location = new File (location);
+	public boolean setLocation(File location){
+		this.location = location;
 		if(!this.location.isDirectory())
 			return this.location.mkdirs();
 		else
@@ -58,5 +54,10 @@ public class GithubDownloader {
 		fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
 		fos.close();
 		return arquivo;
+	}
+	
+	private String getProjectNameFromUrl(String url) {
+		int index = url.lastIndexOf("/");
+		return url.substring(index+1);	
 	}
 }

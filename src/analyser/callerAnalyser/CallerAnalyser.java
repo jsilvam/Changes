@@ -170,7 +170,6 @@ public class CallerAnalyser {
 	}
 	
 	
-	//Incomplete
 	private boolean fitClassPattern(SourceCodeChange caller, CallerPattern callee) {
 		if(callee.getType() != CallerType.Class)
 			return false;

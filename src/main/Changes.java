@@ -1,7 +1,7 @@
 package main;
 
 import java.io.File;
-import java.util.LinkedList;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -13,24 +13,47 @@ import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
 import utils.CSV;
 import utils.FileUtils;
 import utils.GithubDownloader;
+import utils.Logger;
 import utils.ZipExtractor;
 
 public class Changes {
-	private String urlRepository;
+	private String repositoryUrl;
 	private File refactoringsCSVFile;
 	private CSV resultCSV;
 	
-	public Changes(String urlRepository, File refactoringsCSVPath, CSV resultCSV){
-		this.urlRepository = urlRepository;
-		this.refactoringsCSVFile = refactoringsCSVPath;
-		this.resultCSV = resultCSV;
+	public Changes(String repositoryUrl, File refactoringsCSVFile) throws IOException {
+		String projectName= getProjectNameFromUrl(repositoryUrl);
+		this.repositoryUrl = repositoryUrl;
+		this.refactoringsCSVFile = refactoringsCSVFile;
+		this.resultCSV = new CSV(projectName);
+	}
+	
+	public void analyse(File isRefactoringFile, boolean shouldLog) throws IOException  {
+		String projectName= getProjectNameFromUrl(repositoryUrl);
+		Logger logger = new Logger(projectName, shouldLog);
+		RefactoringIterator ri = new RefactoringIterator(isRefactoringFile);
+		
+		String commit = ri.getNextCommit();
+		while(commit != null) {
+			try {
+				extractChanges(commit);
+			} catch (Exception e) {
+				System.out.println("Get Changes: Error");
+				e.printStackTrace();
+				logger.logError(commit, e);
+			}
+			
+		}
+		ri.close();
+		logger.close();
+		resultCSV.close();
 	}
 	
 	public void extractChanges(String commit) throws Exception {
 		//initialize
-		Refactorings refactorings = new Refactorings(this.refactoringsCSVFile,commit); //class not finished.
+		Refactorings refactorings = new Refactorings(this.refactoringsCSVFile,commit);
 		String parent=refactorings.getParent();
-		GithubDownloader git = new GithubDownloader(this.urlRepository);
+		GithubDownloader git = new GithubDownloader(this.repositoryUrl);
 		ModificationHistory modificationHistory = new ModificationHistory();
 		
 		//download and extract projects
@@ -102,6 +125,11 @@ public class Changes {
 				f.delete();
 		}
 		dir.delete();
+	}
+	
+	private String getProjectNameFromUrl(String url) {
+		int index = url.lastIndexOf("/");
+		return url.substring(index+1);	
 	}
 
 }

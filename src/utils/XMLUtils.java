@@ -27,7 +27,6 @@ public abstract class XMLUtils {
 		Document doc = dBuilder.parse(xmlFile);
 		
 		return doc.getElementsByTagName(tag);
-		
 	}
 
 	public static List<File> getModules(File xmlFile) throws Exception{
@@ -51,24 +50,6 @@ public abstract class XMLUtils {
 		
 		return result;
 	}
-	
-	/*public void addDpendencies(List<File> modules) throws ParserConfigurationException, SAXException, IOException{
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		
-		for(File module:modules) {
-			File pom=new File(module,"pom.xml");
-			Document doc = dBuilder.parse(pom);
-			
-			NodeList nList=doc.getElementsByTagName("packaging");
-			Node n=nList.item(0);
-			if(n!=null && n.getTextContent().equals("pom"))
-				continue;
-			
-			Dependency dependency=new Dependency();
-		}
-	}*/
-	
 	
 	public static void addPlugins(List<File> modules) throws SAXException, IOException, ParserConfigurationException, TransformerException {
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

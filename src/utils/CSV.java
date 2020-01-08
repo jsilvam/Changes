@@ -13,8 +13,9 @@ public class CSV {
 	
 	private FileWriter writer;
 	
-	public CSV(File file) throws IOException {
-		writer = new FileWriter(file);
+	public CSV(String projectName) throws IOException {
+		File csvFile = new File(FileUtils.getOutputFolder(), projectName + ".csv");
+		
 		writer.write("Commit;ChangeType;"
 				+ "ChangedEntity;"
 				+ "EntityType;"

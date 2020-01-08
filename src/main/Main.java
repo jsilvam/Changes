@@ -1,348 +1,160 @@
 package main;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-import analyser.StringAnalyser;
-import analyser.callerAnalyser.CallerAnalyser;
-import analyser.callerAnalyser.CallerPattern;
-import ch.uzh.ifi.seal.changedistiller.ChangeDistiller;
-import ch.uzh.ifi.seal.changedistiller.ChangeDistiller.Language;
-import ch.uzh.ifi.seal.changedistiller.JavaChangeDistillerModule;
-import ch.uzh.ifi.seal.changedistiller.ast.java.JavaSourceCodeChangeClassifier;
-import ch.uzh.ifi.seal.changedistiller.distilling.Distiller;
-import ch.uzh.ifi.seal.changedistiller.distilling.DistillerFactory;
-import ch.uzh.ifi.seal.changedistiller.distilling.FileDistiller;
-import ch.uzh.ifi.seal.changedistiller.distilling.SourceCodeChangeClassifier;
-import ch.uzh.ifi.seal.changedistiller.model.classifiers.EntityType;
-import ch.uzh.ifi.seal.changedistiller.model.classifiers.java.JavaEntityType;
-import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeChange;
-import ch.uzh.ifi.seal.changedistiller.model.entities.SourceCodeEntity;
-import ch.uzh.ifi.seal.changedistiller.structuredifferencing.StructureNode;
-import ch.uzh.ifi.seal.changedistiller.treedifferencing.Node;
-import ch.uzh.ifi.seal.changedistiller.treedifferencing.TreeDifferencer;
-import ch.uzh.ifi.seal.changedistiller.ast.ASTHelper;
-import ch.uzh.ifi.seal.changedistiller.ast.ASTHelperFactory;
-import utils.CSV;
 import utils.FileUtils;
 
 public class Main {
 	
-	private static String dataFolder = "Projetos Dataset";
-	private static File dir = new File(System.getProperty("user.home") + File.separator + "Dropbox" + File.separator + "UFCG" + File.separator + 
-			"Projeto" + File.separator + "Dados" + File.separator + dataFolder);
+	public static void main(String[] args) throws Exception {
+		String repositoryUrl = null;
+		String repositoryList = null;
+		String refactoringFile = null;
+		String purityFile = null;
+		String outputFolder = null;
+		String downloadFolder = null;
+		boolean shouldLog = false;
+		
+		for(int i = 0; i<args.length; i++){
+			switch(args[i]) {
+			case "--url":
+			case "-u":
+				repositoryUrl = args[++i];
+				break;
+			case "--list":
+			case "-l":
+				repositoryList = args[++i];
+				break;
+			case "--refactorings":
+			case "-r":
+				refactoringFile = args[++i];
+				break;
+			case "--purity":
+			case "-p":
+				purityFile = args[++i];
+				break;
+			case "--output":
+			case "-o":
+				outputFolder = args[++i];
+				break;
+			case "--download":
+			case "-d":
+				downloadFolder = args[++i];
+				break;
+			case "-log":
+				shouldLog = Boolean.parseBoolean(args[++i]);
+				break;
+			case "-help":
+				help();
+				break;
+			default:
+			}
+		}
+		
+		if(outputFolder!=null && !outputFolder.isEmpty()) {
+			FileUtils.setOutputFolder(outputFolder);
+		}
+		
+		if(downloadFolder!=null && !downloadFolder.isEmpty()) {
+			FileUtils.setDownloadFolder(downloadFolder);
+		}
+		
+		
+		if(repositoryList != null) {
+			List<String> urls = getUrls(repositoryList);
+			for(String url: urls) {
+				
+				
+				if(refactoringFile != null && purityFile != null) {
+					
+					List<File[]> files = getRefactoringFiles(refactoringFile,purityFile);
+					for(File[] file: files) {
+						Changes changes = new Changes(url,file[0]);
+						changes.analyse(file[1], shouldLog);
+					}
+				}else
+					throw new Exception("Necessary file missing!");
+			}
+			
+		}else if (repositoryUrl != null) {
+			if(refactoringFile != null && purityFile != null) {
+				Changes changes = new Changes(repositoryUrl,new File(refactoringFile));
+				changes.analyse(new File(purityFile), shouldLog);
+			}else
+				throw new Exception("Necessary file missing!");
+			
+		}else
+			throw new Exception("No url provided!");
+	}
 	
-	private static void check(String repositoryUrl) throws IOException  {
-		String projectName = repositoryUrl.substring(repositoryUrl.lastIndexOf("/")+1);
+	
+	private static void help() {
+		System.out.println("-u, --url:            Repository's url *                      ");
+		System.out.println("-l, --list:           File with list of repository's url *    ");
+		System.out.println("-r, --refactorings:   File with refactorings **               ");
+		System.out.println("-p, --purity:         File indicating behavioral change ***   ");
+		System.out.println("-O, --output:         Output folder                         (Default: This directory)");
+		System.out.println("-d, --download:       Download folder                       (Default: Temp directory)");
+		System.out.println("-log:                 Log errors                            (Default: False)");
+		System.out.println();
+		System.out.println(" *   It is necessary a repository's urls or file with a list of repository's url");
+		System.out.println(" **  It is necessary a file containg the commits with refactorings. If a list of repository's url is provided, then it is necessary a list of files as input.");
+		System.out.println(" ***  It is necessary a file indicating the commits with behavioral change. If a list of repository's url is provided, then it is necessary a list of files as input.");
+	}
+	
+	private static List<String> getUrls(String listFile) throws IOException{
+		ArrayList<String> urls = new ArrayList<>();
+		FileReader reader = new FileReader(listFile);
+		BufferedReader buff = new BufferedReader(reader);
 		
-		File refactoringsCSV= new File(dir,"Part 1" + File.separator + projectName+".csv");
-		File isefactoringFile = new File(dir,"Part 2" + File.separator + projectName+".csv");
-		if(!refactoringsCSV.exists() || !isefactoringFile.exists())
-			return;
+		String url = buff.readLine();
+		while(url != null) {
+			urls.add(url);
+			url = buff.readLine();
+		}
+		buff.close();
+		return urls;
+	}
+	
+	private static List<File[]> getRefactoringFiles(String refactoringFile, String purityFile) throws Exception{
+		List<File> refactoringList = getFiles(refactoringFile);
+		List<File> purityList = getFiles(purityFile);
+		List<File[]> result = new ArrayList<>();
 		
-		File csvFile = new File(dir, "Part 3" + File.separator + projectName+".csv");
-		File logFile = new File(dir, "Part 3" + File.separator + "log" + File.separator + projectName+" - log.txt");
-		
-		CSV result= new CSV(csvFile);
-		Scanner in = new Scanner(isefactoringFile).useDelimiter(";");
-		PrintStream ps = new PrintStream(new FileOutputStream(logFile, true));
-		
-		Changes changes=new Changes(repositoryUrl, refactoringsCSV, result);
-		
-		in.nextLine();
-		int count = 0;
-		while(in.hasNext()) {
-			String commit=in.next();
-			if(in.nextLine().equals(";0")) {
-				try {
-					count++;
-					changes.extractChanges(commit);
-				} catch (Exception e) {
-					count--;
-					System.out.println("Get Changes: Error");
-					e.printStackTrace();
-					ps.println("Commit error: "+commit);
-					e.printStackTrace(ps);
-					ps.flush();
+		for(File refactoring: refactoringList) {
+			for(File purity: purityList) {
+				if(refactoring.getName().equals(purity.getName())) {
+					File[] files = {refactoring, purity};
+					result.add(files);
+					purityList.remove(purity);
 				}
 			}
 		}
-		in.close();
-		ps.close();
-		result.close();
-//		if(count==0 && csvFile.exists())
-//			csvFile.delete();
+		return result;
 	}
 	
-	
-	public static void main(String[] args) throws IOException {
-		check("https://github.com/rackerlabs/blueflood");
-		check("https://github.com/spotify/helios");
-		check("https://github.com/scobal/seyren");
-		check("https://github.com/orfjackal/retrolambda");
-		check("https://github.com/google/truth");
-		check("https://github.com/selendroid/selendroid");
-		check("https://github.com/Atmosphere/atmosphere");
-		check("https://github.com/Graylog2/graylog2-server");
-		check("https://github.com/datastax/java-driver");
-		check("https://github.com/robovm/robovm");
-		check("https://github.com/spring-projects/spring-data-mongodb");
-		check("https://github.com/antlr/antlr4");
-		check("https://github.com/Netflix/feign");
-		check("https://github.com/square/okhttp");
-		check("https://github.com/glyptodon/guacamole-client");
-		check("https://github.com/dropwizard/metrics");
-		check("https://github.com/apache/giraph");
-		check("https://github.com/cucumber/cucumber-jvm");
-		check("https://github.com/square/wire");
-		check("https://github.com/HubSpot/Singularity");
-		check("https://github.com/BroadleafCommerce/BroadleafCommerce");
-		check("https://github.com/jayway/rest-assured");
-		check("https://github.com/addthis/hydra");
-		check("https://github.com/spring-projects/spring-data-rest");
-		check("https://github.com/GoClipse/goclipse");
-//		check("https://github.com/Athou/commafeed");
-//		check("https://github.com/bennidi/mbassador");
-//		check("https://github.com/brettwooldridge/HikariCP");
-//		check("https://github.com/opentripplanner/OpenTripPlanner");
-//		check("https://github.com/spring-projects/spring-data-neo4j");
-//		check("https://github.com/spring-projects/spring-data-jpa");
-//		check("https://github.com/thymeleaf/thymeleaf");
-//		check("https://github.com/square/javapoet");
-//		check("https://github.com/jline/jline2");
-//		check("https://github.com/plutext/docx4j");
-//		check("https://github.com/zeromq/jeromq");
-//		check("https://github.com/xetorthio/jedis");
-//		check("https://github.com/NLPchina/ansj_seg");
-//		check("https://github.com/alibaba/druid");
-//		check("https://github.com/clojure/clojure");
-//		check("https://github.com/spring-projects/spring-hateoas");
-//		check("https://github.com/HdrHistogram/HdrHistogram");
-//		check("https://github.com/AdoptOpenJDK/jitwatch");
-//		check("https://github.com/Graylog2/graylog2-server");
-//		check("https://github.com/nutzam/nutz");
-//		check("https://github.com/belaban/JGroups");
-//		check("https://github.com/clojure/clojure");
+	private static List<File> getFiles(String listFile) throws Exception{
+		ArrayList<File> files = new ArrayList<>();
+		FileReader reader = new FileReader(listFile);
+		BufferedReader buff = new BufferedReader(reader);
 		
-//		String url = 
-//				"https://github.com/bennidi/mbassador";
-//		check(url);
-//		check("https://github.com/brettwooldridge/HikariCP");
-//		check("https://github.com/opentripplanner/OpenTripPlanner");
-//		check("https://github.com/spring-projects/spring-data-neo4j");
-//		check("https://github.com/spring-projects/spring-data-jpa");
-//		check("https://github.com/thymeleaf/thymeleaf");
-//		File urlsFile = new File ("urls3Part.txt");
-//		Scanner urls = new Scanner(urlsFile);
-//		
-//		while(urls.hasNextLine()){
-//			try {
-//				check(urls.nextLine());
-//				
-//			}catch(FileNotFoundException e) {
-//				e.printStackTrace();
-//			}
-//		}
-//		urls.close();
-		
-//		check("https://github.com/square/okhttp");
-//		check("https://github.com/square/retrofit");
-//		check("https://github.com/Kailashrb/scribe-java");
-//		check("https://github.com/jopt-simple/jopt-simple");
-//		check("https://github.com/notnoop/java-apns");	
-//		check("https://github.com/vkostyukov/la4j");
-//		check("https://github.com/apache/incubator-dubbo");
-//		
-		
-		
-		//for(String s:FileUtils.listClass(new File("/home/jaziel/git/Changes/src"))) {
-			//System.out.println(s);
-		//}
-		
-		
-//		File left = new File("Purity5.java");
-//		File right = new File("Purity6.java");
-//		Set<SourceCodeChange> history=new HashSet<SourceCodeChange>();
-//
-//		FileDistiller distiller = ChangeDistiller.createFileDistiller(Language.JAVA);
-//		try {
-//		    distiller.extractClassifiedSourceCodeChanges(left, right);
-//		} catch(Exception e) {
-//		    System.err.println("Warning: error while change distilling. " + e.getMessage());
-//		}
-//		
-//		
-//		
-//		List<SourceCodeChange> changes = distiller.getSourceCodeChanges();
-//		if(changes != null) {
-//		    for(SourceCodeChange change : changes) {
-//		    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
-//		    	
-//		    	System.out.println("\nbegin");
-//		    	System.out.println("change.getLabel():  "+change.getLabel());
-//		    	System.out.println("change.getChangeType():  "+change.getChangeType());
-//		    	
-//		    	System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
-//		    	System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
-//		        System.out.println("change.toString():  "+change.toString());
-//		        System.out.println();
-//		        
-//		        
-//		        System.out.println("\nDeclaration:");
-//		        if(change.getDeclarationStructure()!=null) {
-//		        	Enumeration e=change.getDeclarationStructure().preorderEnumeration();
-//		        	while(e.hasMoreElements())
-//		        		System.out.println(e.nextElement());
-//		        }else {
-//		        	System.out.println("Declaration: null");
-//		        }
-//		        
-//		        System.out.println("\nBody:");
-//		        if(change.getBodyStructure()!=null) {
-//		        	Enumeration e=change.getBodyStructure().preorderEnumeration();
-//		        	Node root=(Node)e.nextElement();
-//		        	while(e.hasMoreElements()) {
-//		        		Node n=(Node)e.nextElement();
-//		        		System.out.println(n.getLabel()+ "  "+ n.getValue()+" : "+distance(n,root));
-//		        	}
-//		        }else {
-//		        	System.out.println("body: null");
-//		        }
-//		        
-		        
-//		        
-////		        
-////		        
-//		        System.out.println("change.getParentEntity().toString():  "+change.getParentEntity().toString());
-//		        
-//		        System.out.println("\nChanged entity");
-//		        System.out.println("change.getChangedEntity().getLabel():  "+change.getChangedEntity().getLabel());
-//		        System.out.println("change.getChangedEntity().getUniqueName():  "+change.getChangedEntity().getUniqueName());
-//		        System.out.println("change.getChangedEntity().getModifiers():  "+change.getChangedEntity().getModifiers());
-//		        System.out.println("change.getChangedEntity().getType().name():  "+change.getChangedEntity().getType().name());
-//		        System.out.println("change.getChangedEntity().getSourceRange().toString():  "+change.getChangedEntity().getSourceRange().toString()+"\n");
-//		        System.out.println("AssociatedEntities");
-//		        for(SourceCodeEntity sc:change.getChangedEntity().getAssociatedEntities()) {
-//		        	System.out.println(sc.getLabel());
-//		        }
-//		        
-//		        System.out.println("\nChange type");
-//		        System.out.println("change.getChangeType().name():  "+change.getChangeType().name());
-//		        System.out.println("change.getChangeType().toString():  "+change.getChangeType().toString());
-//		        System.out.println("change.getChangeType().getSignificance().name():  "+change.getChangeType().getSignificance().name());
-//		        System.out.println("change.getChangeType().getSignificance().toString():  "+change.getChangeType().getSignificance().toString());
-////		        
-////		        
-////		        Enumeration<Node> body = change.getBodyStructure().preorderEnumeration();
-////				while(body.hasMoreElements()) {
-////					Node n=body.nextElement();
-////					System.out.println(n.toString()+"  "+n.isMatched());
-//				}
-//		        
-//		        
-//		    }
-//		    SourceCodeChange scc1 = changes.get(0);
-//		    SourceCodeChange scc2 = changes.get(1);
-//		    
-//		    
-//		    
-//		    Injector injector = Guice.createInjector(new JavaChangeDistillerModule());
-//		    DistillerFactory df = injector.getInstance(DistillerFactory.class); 
-//		    
-//		    //fLeftASTHelper.createStructureEntityVersion(scc1.getBodyStructure());
-//		    
-//		    
-//		    Distiller distille = df.create(scc1.getEntityVersion());
-//		    distille.extractClassifiedSourceCodeChanges(scc1.getDeclarationStructure(), scc2.getDeclarationStructure());
-//		    
-//		    
-//		    
-//		    System.out.println("Teste");
-//		    changes=scc1.getEntityVersion().getSourceCodeChanges();
-//		    if(changes != null) {
-//			    for(SourceCodeChange change : changes) {
-//			    	//System.out.println(change.getLabel()+"  |  "+change.getChangedEntity().getUniqueName());
-//			    	
-//			    	System.out.println("\nbegin");
-//			    	System.out.println("change.getLabel():  "+change.getLabel());
-//			        System.out.println("change.toString():  "+change.toString());
-//			    }
-//		    }
-//		}
-		 
-//		
-//		String str = "EqualsBuilder(teste).append().append(e1.getUniqueName(), e2.getUniqueName()).append(e1.getType(), e2.getType())\r\n"; 
-//				"                .append  (e1.getModifiers(), e2.getModifiers()).isEquals(,,)";
-//		String str2 = "analyser.callerAnalyser.CallerAnalyser.teste";
-//		System.out.println(str+"\n\n");
-//		str = str2.replaceAll("\\s", "");
-//		String[] aux = str.split("E");
-//		System.out.println();
-//		for(int i = 0; i< aux.length; i++)
-//			System.out.println(i+": "+aux[i]);
-//
-//
-//		for(String aux1: aux) {
-//			System.out.println(ca.countParemetersFromInvocation(aux1));
-//		}
-		
-//		String regex = ".*(\\s|\\W)+"+"getUnique"+"(\\s|\\W)+.*";
-//		String str = "String teste,getUnique;";
-//		System.out.println("String dfdf,getUnique;".matches(regex));
-//		
-//		
-//		System.out.println(str.matches(regex));
-		
-		
-//		for(int i = 1; i< aux.length; i++) {
-//			System.out.println(ca.countParemetersFromInvocation(aux[i]));
-//		}
-		
-		
-//		String fullName = "analyser.callerAnalyser.CallerAnalyser.countParemetersFromInvocation";
-//		String str = fullName.replaceAll("\\s","");
-//		int beginIndex = str.lastIndexOf("(") + 1;
-//		int endIndex = str.indexOf(")");
-//		str = str.substring(beginIndex, endIndex);
-//		
-//		String[] split = str.split(",");
-//		
-//		System.out.println(str);
-//		for(int i = 1; i< split.length; i++) {
-//			System.out.println(split[i]);
-//		}
-//		System.out.println(split.length);
-		
-			
-//		String aux = new StringAnalyser().removeSubString(str, '(', ')',true);
-//		System.out.println(aux);
-//		String[] aux1 = "EqualsBuilder".split("E");
-//		System.out.println(aux1.length);
-//		for(String aux2:aux1)
-//			System.out.println(aux2);
-		
-		
+		String file = buff.readLine();
+		while(file != null) {
+			File f = new File(file);
+			if(!f.exists() || f.isDirectory()) {
+				buff.close();
+				throw new Exception("invalid Input File: " + file);
+			}
+			files.add(f);
+			file = buff.readLine();
+		}
+		buff.close();
+		return files;
 	}
-	
-	
-	
-
 }
 

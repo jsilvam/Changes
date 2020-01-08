@@ -64,11 +64,9 @@ public class Refactorings {
 						key=in.next();
 						this.inlinedMethods.put(key, value);
 						break;
-					case "Rename Method"://when the method e also moved, it is saved as moved method. When is not, is saved as renamedMethod.
+					case "Rename Method"://when the method is also moved, it is saved as moved method. When is not, is saved as renamedMethod.
 						key=in.next();
 						value=in.next();
-//						if(key.equals("retrofit.converter.SimpleXMLConverter.setStrict(boolean)"))
-//							System.out.println();
 						String before=key.substring(0, key.lastIndexOf("."));
 						String after=value.substring(0, value.lastIndexOf("."));
 						if(!before.equals(after)) {
@@ -128,17 +126,14 @@ public class Refactorings {
 		return (this.movedAttributesLeftToRight.containsKey(signature) || this.movedAttributesRightToLeft.containsKey(signature));
 	}
 	
-	//needs better name
 	public boolean isExtractedMethod(String signature) {
 		return (this.extractedMethods.containsKey(signature) || this.extractedMethods.containsValue(signature));
 	}
 	
-	//needs better name
 	public boolean isInlinedMethod(String signature) {
 		return (this.inlinedMethods.containsKey(signature) || this.inlinedMethods.containsValue(signature));
 	}
 	
-	//needs better name
 	public boolean isRefactoredClass(String signature) {
 		return (this.changedClassSignatures.containsKey(signature) || 
 				this.changedClassSignatures.containsValue(signature) ||
